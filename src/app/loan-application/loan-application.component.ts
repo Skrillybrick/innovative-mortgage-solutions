@@ -154,11 +154,12 @@ export class LoanApplicationComponent implements OnInit {
       previousResidences: this.fb.array([])
     });
     
-    // Documentation Form
+    // Documentation Form with file uploads
     this.documentationForm = this.fb.group({
-      idUploaded: [false, [Validators.requiredTrue]],
-      proofOfIncomeUploaded: [false, [Validators.requiredTrue]],
-      bankStatementsUploaded: [false, [Validators.requiredTrue]],
+      idDocument: [null, [Validators.required]],
+      incomeDocuments: [null, [Validators.required]],
+      bankStatements: [null, [Validators.required]],
+      additionalDocuments: [null], // Optional additional documents
       agreeToTerms: [false, [Validators.requiredTrue]]
     });
   }
@@ -333,7 +334,64 @@ export class LoanApplicationComponent implements OnInit {
       console.log('Property Info:', this.propertyInfoForm.value);
       console.log('Financial Info:', this.financialInfoForm.value);
       console.log('Living History:', this.livingHistoryForm.value);
-      console.log('Documentation:', this.documentationForm.value);
+      
+      // Log document information more specifically
+      const idDoc = this.documentationForm.get('idDocument')?.value;
+      const incomeFiles = this.documentationForm.get('incomeDocuments')?.value;
+      const bankFiles = this.documentationForm.get('bankStatements')?.value;
+      const additionalFiles = this.documentationForm.get('additionalDocuments')?.value;
+      
+      console.log('Documentation:');
+      console.log('- ID Document:', idDoc ? idDoc.name : 'None');
+      console.log('- Income Documents:', incomeFiles ? Array.from(incomeFiles as File[]).map((f: File) => f.name).join(', ') : 'None');
+      console.log('- Bank Statements:', bankFiles ? Array.from(bankFiles as File[]).map((f: File) => f.name).join(', ') : 'None');
+      console.log('- Additional Documents:', additionalFiles ? Array.from(additionalFiles as File[]).map((f: File) => f.name).join(', ') : 'None');
+      console.log('- Terms Agreed:', this.documentationForm.get('agreeToTerms')?.value);
+      
+      // In a real application, you would send files to a server here, potentially using FormData
+      // For example:
+      /*
+      const formData = new FormData();
+      formData.append('idDocument', idDoc);
+      
+      if (incomeFiles) {
+        for (let i = 0; i < incomeFiles.length; i++) {
+          formData.append('incomeDocuments', incomeFiles[i]);
+        }
+      }
+      
+      if (bankFiles) {
+        for (let i = 0; i < bankFiles.length; i++) {
+          formData.append('bankStatements', bankFiles[i]);
+        }
+      }
+      
+      if (additionalFiles) {
+        for (let i = 0; i < additionalFiles.length; i++) {
+          formData.append('additionalDocuments', additionalFiles[i]);
+        }
+      }
+      
+      // Add form data
+      formData.append('loanPurpose', this.isRefinance ? 'refinance' : 'purchase');
+      formData.append('personalInfo', JSON.stringify(this.personalInfoForm.value));
+      formData.append('propertyInfo', JSON.stringify(this.propertyInfoForm.value));
+      formData.append('financialInfo', JSON.stringify(this.financialInfoForm.value));
+      formData.append('livingHistory', JSON.stringify({
+        currentResidence: this.livingHistoryForm.value,
+        previousResidences: this.previousResidences.value
+      }));
+      
+      // Submit via HTTP
+      this.http.post('/api/loan-applications', formData).subscribe(
+        response => {
+          this.applicationSubmitted = true;
+        },
+        error => {
+          console.error('Error submitting application:', error);
+        }
+      );
+      */
       
       this.applicationSubmitted = true;
     }
@@ -414,6 +472,16 @@ export class LoanApplicationComponent implements OnInit {
     return this.livingHistoryForm.get('previousResidences') as FormArray;
   }
   
+  // Helper to get document upload progress percentage
+  getDocumentUploadProgress(): number {
+    let completedCount = 0;
+    if (this.hasFile('idDocument')) completedCount++;
+    if (this.hasFile('incomeDocuments')) completedCount++;
+    if (this.hasFile('bankStatements')) completedCount++;
+    
+    return (completedCount / 3) * 100;
+  }
+  
   // Create a new previous residence form group
   createPreviousResidenceFormGroup(): FormGroup {
     return this.fb.group({
@@ -470,5 +538,157 @@ export class LoanApplicationComponent implements OnInit {
   resetLoanPurpose(): void {
     this.loanPurposeSelected = false;
     this.loanPurposeForm.reset();
+  }
+  
+  // File handling methods
+  onFileSelected(event: any, controlName: string): void {
+    // Handle both drop and file input events
+    const files = event.type === 'drop' ? event.dataTransfer.files : event.target.files;
+    if (files && files.length > 0) {
+      // Check for allowed file types
+      const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png'];
+      let allFilesValid = true;
+      let totalSize = 0;
+      
+      // Check each file's type and size
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        totalSize += file.size;
+        
+        if (!allowedTypes.includes(fileExtension)) {
+          allFilesValid = false;
+          console.error(`File ${file.name} has an invalid file type. Allowed types: ${allowedTypes.join(', ')}`);
+          // In a real app, you would show an error message to the user
+          break;
+        }
+        
+        // Check file size (5MB for single files, 10MB total for multiple)
+        const maxSize = controlName === 'idDocument' ? 5 * 1024 * 1024 : 10 * 1024 * 1024; // 5MB or 10MB
+        if (controlName === 'idDocument' && file.size > maxSize) {
+          allFilesValid = false;
+          console.error(`File ${file.name} exceeds the maximum size of 5MB`);
+          // In a real app, you would show an error message to the user
+          break;
+        } else if (totalSize > maxSize && controlName !== 'idDocument') {
+          allFilesValid = false;
+          console.error(`Total file size exceeds the maximum size of 10MB`);
+          // In a real app, you would show an error message to the user
+          break;
+        }
+      }
+      
+      if (allFilesValid) {
+        // For multiple files (like income documents or bank statements)
+        if (controlName === 'incomeDocuments' || controlName === 'bankStatements' || controlName === 'additionalDocuments') {
+          // Get existing files from the control if any
+          const existingFiles = this.documentationForm.get(controlName)?.value;
+          
+          // Create a DataTransfer object to merge existing and new files
+          const dataTransfer = new DataTransfer();
+          
+          // Add existing files if present
+          if (existingFiles instanceof FileList && existingFiles.length > 0) {
+            Array.from(existingFiles).forEach(file => {
+              dataTransfer.items.add(file);
+            });
+          }
+          
+          // Add new files
+          Array.from<File>(files).forEach(file => {
+            dataTransfer.items.add(file);
+          });
+          
+          // Set the combined FileList as the control value
+          this.documentationForm.get(controlName)?.setValue(dataTransfer.files);
+        } else {
+          // For single file (like ID document)
+          this.documentationForm.get(controlName)?.setValue(files[0]);
+        }
+        
+        // Mark the control as touched to trigger validation
+        this.documentationForm.get(controlName)?.markAsTouched();
+      } else {
+        // Reset the file input if validation fails
+        event.target.value = "";
+        
+        // In a real app, you would show an error message to the user
+        // For now, we'll just log to the console
+      }
+    }
+  }
+  
+  getFileNames(controlName: string): string[] {
+    const control = this.documentationForm.get(controlName);
+    if (!control || !control.value) return [];
+    
+    // For multiple files
+    if (controlName === 'incomeDocuments' || controlName === 'bankStatements' || controlName === 'additionalDocuments') {
+      const files = control.value as FileList;
+      return Array.from(files).map(file => file.name);
+    }
+    
+    // For single file
+    const file = control.value as File;
+    return [file.name];
+  }
+  
+  removeFile(controlName: string, index?: number): void {
+    if (index !== undefined && (controlName === 'incomeDocuments' || controlName === 'bankStatements' || controlName === 'additionalDocuments')) {
+      // For multiple files, create a new FileList without the removed file
+      const currentFiles = this.documentationForm.get(controlName)?.value as FileList;
+      if (currentFiles) {
+        const dataTransfer = new DataTransfer();
+        Array.from(currentFiles).forEach((file, i) => {
+          if (i !== index) {
+            dataTransfer.items.add(file);
+          }
+        });
+        this.documentationForm.get(controlName)?.setValue(dataTransfer.files.length > 0 ? dataTransfer.files : null);
+      }
+    } else {
+      // For single file, just clear the control
+      this.documentationForm.get(controlName)?.setValue(null);
+    }
+    
+    // Mark the control as touched to trigger validation
+    this.documentationForm.get(controlName)?.markAsTouched();
+  }
+  
+  // Check if file is selected
+  hasFile(controlName: string): boolean {
+    const control = this.documentationForm.get(controlName);
+    return !!(control && control.value);
+  }
+  
+  // Format file size for display (e.g., 1.5 MB)
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+  
+  // Get file size for a specific control
+  getFileSize(controlName: string): string {
+    const control = this.documentationForm.get(controlName);
+    if (!control || !control.value) return '0 Bytes';
+    
+    if (controlName === 'idDocument') {
+      // Single file
+      const file = control.value as File;
+      return this.formatFileSize(file.size);
+    } else {
+      // Multiple files
+      const files = control.value as FileList;
+      let totalSize = 0;
+      for (let i = 0; i < files.length; i++) {
+        totalSize += files[i].size;
+      }
+      return this.formatFileSize(totalSize);
+    }
   }
 }

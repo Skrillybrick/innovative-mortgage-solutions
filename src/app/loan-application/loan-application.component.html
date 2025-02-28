@@ -717,48 +717,244 @@
             <h2>Documentation & Review</h2>
             
             <p class="documentation-note">
-              Please confirm that you have the following documents ready for submission. 
-              These will be required for your loan application processing.
+              Please upload the following required documents to complete your application. 
+              These documents are necessary for our loan officers to process your application.
             </p>
             
-            <div class="document-checklist">
-              <div class="document-item">
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="idUploaded"> 
-                  Government-issued ID (driver's license, passport, etc.)
-                  <span class="required">*</span>
-                </label>
-                @if (hasError(documentationForm, 'idUploaded', 'required')) {
+            <div class="document-upload-progress">
+              <div class="progress-label">
+                <span>Document Upload Progress</span>
+                <span class="progress-percentage">
+                  {{ getDocumentUploadProgress() | number:'1.0-0' }}%
+                </span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar" 
+                     [style.width.%]="getDocumentUploadProgress()">
+                </div>
+              </div>
+            </div>
+            
+            <div class="document-upload-section">
+              <!-- ID Document Upload -->
+              <div class="document-upload-item">
+                <div class="document-header">
+                  <h3>Government-issued ID <span class="required">*</span></h3>
+                  <p class="document-description">Upload a valid driver's license, passport, or other government-issued ID</p>
+                </div>
+                
+                <div class="upload-area" [class.has-file]="hasFile('idDocument')" 
+                     (dragover)="$event.preventDefault(); $event.stopPropagation();"
+                     (dragleave)="$event.preventDefault(); $event.stopPropagation();"
+                     (drop)="$event.preventDefault(); $event.stopPropagation(); onFileSelected($event, 'idDocument')">
+                  @if (!hasFile('idDocument')) {
+                    <label for="idDocument" class="upload-label">
+                      <div class="upload-icon">
+                        <span class="icon">📄</span>
+                      </div>
+                      <div class="upload-text">
+                        <span class="primary-text">Click to upload</span>
+                        <span class="secondary-text">or drag and drop</span>
+                        <span class="file-types">PDF, JPG, or PNG (max 5MB)</span>
+                      </div>
+                    </label>
+                    <input type="file" id="idDocument" class="file-input" accept=".pdf,.jpg,.jpeg,.png" 
+                           (change)="onFileSelected($event, 'idDocument')">
+                  } @else {
+                    <div class="file-preview">
+                      <div class="file-info">
+                        <span class="file-icon">📄</span>
+                        <div class="file-details">
+                          <span class="file-name">{{ getFileNames('idDocument')[0] }}</span>
+                          <span class="file-size">{{ getFileSize('idDocument') }}</span>
+                        </div>
+                      </div>
+                      <button type="button" class="remove-file" (click)="removeFile('idDocument')">
+                        <span class="remove-icon">×</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+                
+                @if (documentationForm.get('idDocument')?.invalid && documentationForm.get('idDocument')?.touched) {
                   <div class="error-message">
-                    Please confirm you have this document
+                    Please upload your government ID
                   </div>
                 }
               </div>
               
-              <div class="document-item">
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="proofOfIncomeUploaded"> 
-                  Proof of Income (2 years of W-2s, last 3 pay stubs)
-                  <span class="required">*</span>
-                </label>
-                @if (hasError(documentationForm, 'proofOfIncomeUploaded', 'required')) {
+              <!-- Income Documents Upload -->
+              <div class="document-upload-item">
+                <div class="document-header">
+                  <h3>Proof of Income <span class="required">*</span></h3>
+                  <p class="document-description">Upload your last 2 years of W-2s and recent pay stubs</p>
+                </div>
+                
+                <div class="upload-area" [class.has-file]="hasFile('incomeDocuments')"
+                     (dragover)="$event.preventDefault(); $event.stopPropagation();"
+                     (dragleave)="$event.preventDefault(); $event.stopPropagation();"
+                     (drop)="$event.preventDefault(); $event.stopPropagation(); onFileSelected($event, 'incomeDocuments')">
+                  @if (!hasFile('incomeDocuments')) {
+                    <label for="incomeDocuments" class="upload-label">
+                      <div class="upload-icon">
+                        <span class="icon">📊</span>
+                      </div>
+                      <div class="upload-text">
+                        <span class="primary-text">Click to upload multiple files</span>
+                        <span class="secondary-text">or drag and drop</span>
+                        <span class="file-types">PDF, JPG, or PNG (max 10MB total)</span>
+                      </div>
+                    </label>
+                    <input type="file" id="incomeDocuments" class="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple
+                           (change)="onFileSelected($event, 'incomeDocuments')">
+                  } @else {
+                    <div class="files-preview">
+                      <div class="files-summary">
+                        <span class="total-files">{{ getFileNames('incomeDocuments').length }} files</span>
+                        <span class="total-size">{{ getFileSize('incomeDocuments') }}</span>
+                      </div>
+                      @for (fileName of getFileNames('incomeDocuments'); track $index) {
+                        <div class="file-preview">
+                          <div class="file-info">
+                            <span class="file-icon">📄</span>
+                            <div class="file-details">
+                              <span class="file-name">{{ fileName }}</span>
+                            </div>
+                          </div>
+                          <button type="button" class="remove-file" (click)="removeFile('incomeDocuments', $index)">
+                            <span class="remove-icon">×</span>
+                          </button>
+                        </div>
+                      }
+                      
+                      <label for="incomeDocumentsAdd" class="add-more-files">
+                        <span>+ Add more files</span>
+                      </label>
+                      <input type="file" id="incomeDocumentsAdd" class="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple
+                             (change)="onFileSelected($event, 'incomeDocuments')">
+                    </div>
+                  }
+                </div>
+                
+                @if (documentationForm.get('incomeDocuments')?.invalid && documentationForm.get('incomeDocuments')?.touched) {
                   <div class="error-message">
-                    Please confirm you have this document
+                    Please upload your income documents
                   </div>
                 }
               </div>
               
-              <div class="document-item">
-                <label class="checkbox-label">
-                  <input type="checkbox" formControlName="bankStatementsUploaded"> 
-                  Bank Statements (last 2-3 months)
-                  <span class="required">*</span>
-                </label>
-                @if (hasError(documentationForm, 'bankStatementsUploaded', 'required')) {
+              <!-- Bank Statements Upload -->
+              <div class="document-upload-item">
+                <div class="document-header">
+                  <h3>Bank Statements <span class="required">*</span></h3>
+                  <p class="document-description">Upload your last 2-3 months of bank statements</p>
+                </div>
+                
+                <div class="upload-area" [class.has-file]="hasFile('bankStatements')"
+                     (dragover)="$event.preventDefault(); $event.stopPropagation();"
+                     (dragleave)="$event.preventDefault(); $event.stopPropagation();"
+                     (drop)="$event.preventDefault(); $event.stopPropagation(); onFileSelected($event, 'bankStatements')">
+                  @if (!hasFile('bankStatements')) {
+                    <label for="bankStatements" class="upload-label">
+                      <div class="upload-icon">
+                        <span class="icon">🏦</span>
+                      </div>
+                      <div class="upload-text">
+                        <span class="primary-text">Click to upload multiple files</span>
+                        <span class="secondary-text">or drag and drop</span>
+                        <span class="file-types">PDF, JPG, or PNG (max 10MB total)</span>
+                      </div>
+                    </label>
+                    <input type="file" id="bankStatements" class="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple
+                           (change)="onFileSelected($event, 'bankStatements')">
+                  } @else {
+                    <div class="files-preview">
+                      <div class="files-summary">
+                        <span class="total-files">{{ getFileNames('bankStatements').length }} files</span>
+                        <span class="total-size">{{ getFileSize('bankStatements') }}</span>
+                      </div>
+                      @for (fileName of getFileNames('bankStatements'); track $index) {
+                        <div class="file-preview">
+                          <div class="file-info">
+                            <span class="file-icon">📄</span>
+                            <div class="file-details">
+                              <span class="file-name">{{ fileName }}</span>
+                            </div>
+                          </div>
+                          <button type="button" class="remove-file" (click)="removeFile('bankStatements', $index)">
+                            <span class="remove-icon">×</span>
+                          </button>
+                        </div>
+                      }
+                      
+                      <label for="bankStatementsAdd" class="add-more-files">
+                        <span>+ Add more files</span>
+                      </label>
+                      <input type="file" id="bankStatementsAdd" class="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple
+                             (change)="onFileSelected($event, 'bankStatements')">
+                    </div>
+                  }
+                </div>
+                
+                @if (documentationForm.get('bankStatements')?.invalid && documentationForm.get('bankStatements')?.touched) {
                   <div class="error-message">
-                    Please confirm you have this document
+                    Please upload your bank statements
                   </div>
                 }
+              </div>
+              
+              <!-- Additional Documents (Optional) -->
+              <div class="document-upload-item">
+                <div class="document-header">
+                  <h3>Additional Documents <span class="optional">(optional)</span></h3>
+                  <p class="document-description">Upload any additional documents that may be helpful for your application</p>
+                </div>
+                
+                <div class="upload-area" [class.has-file]="hasFile('additionalDocuments')"
+                     (dragover)="$event.preventDefault(); $event.stopPropagation();"
+                     (dragleave)="$event.preventDefault(); $event.stopPropagation();"
+                     (drop)="$event.preventDefault(); $event.stopPropagation(); onFileSelected($event, 'additionalDocuments')">
+                  @if (!hasFile('additionalDocuments')) {
+                    <label for="additionalDocuments" class="upload-label">
+                      <div class="upload-icon">
+                        <span class="icon">📁</span>
+                      </div>
+                      <div class="upload-text">
+                        <span class="primary-text">Click to upload multiple files</span>
+                        <span class="secondary-text">or drag and drop</span>
+                        <span class="file-types">PDF, JPG, or PNG (max 10MB total)</span>
+                      </div>
+                    </label>
+                    <input type="file" id="additionalDocuments" class="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple
+                           (change)="onFileSelected($event, 'additionalDocuments')">
+                  } @else {
+                    <div class="files-preview">
+                      <div class="files-summary">
+                        <span class="total-files">{{ getFileNames('additionalDocuments').length }} files</span>
+                        <span class="total-size">{{ getFileSize('additionalDocuments') }}</span>
+                      </div>
+                      @for (fileName of getFileNames('additionalDocuments'); track $index) {
+                        <div class="file-preview">
+                          <div class="file-info">
+                            <span class="file-icon">📄</span>
+                            <div class="file-details">
+                              <span class="file-name">{{ fileName }}</span>
+                            </div>
+                          </div>
+                          <button type="button" class="remove-file" (click)="removeFile('additionalDocuments', $index)">
+                            <span class="remove-icon">×</span>
+                          </button>
+                        </div>
+                      }
+                      
+                      <label for="additionalDocumentsAdd" class="add-more-files">
+                        <span>+ Add more files</span>
+                      </label>
+                      <input type="file" id="additionalDocumentsAdd" class="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple
+                             (change)="onFileSelected($event, 'additionalDocuments')">
+                    </div>
+                  }
+                </div>
               </div>
             </div>
             
@@ -819,6 +1015,48 @@
                     </span>
                   </div>
                 }
+                
+                <!-- Add document information to summary -->
+                <div class="summary-item">
+                  <span class="label">Documents:</span>
+                  <div class="value">
+                    <div class="document-summary">
+                      <strong>ID Document:</strong> 
+                      @if (hasFile('idDocument')) {
+                        <span class="file-count complete-text">Uploaded ({{ getFileNames('idDocument').length }} file)</span>
+                      } @else {
+                        <span class="file-count incomplete-text">Not uploaded</span>
+                      }
+                    </div>
+                    
+                    <div class="document-summary">
+                      <strong>Income Documents:</strong> 
+                      @if (hasFile('incomeDocuments')) {
+                        <span class="file-count complete-text">Uploaded ({{ getFileNames('incomeDocuments').length }} files)</span>
+                      } @else {
+                        <span class="file-count incomplete-text">Not uploaded</span>
+                      }
+                    </div>
+                    
+                    <div class="document-summary">
+                      <strong>Bank Statements:</strong> 
+                      @if (hasFile('bankStatements')) {
+                        <span class="file-count complete-text">Uploaded ({{ getFileNames('bankStatements').length }} files)</span>
+                      } @else {
+                        <span class="file-count incomplete-text">Not uploaded</span>
+                      }
+                    </div>
+                    
+                    <div class="document-summary">
+                      <strong>Additional Documents:</strong> 
+                      @if (hasFile('additionalDocuments')) {
+                        <span class="file-count">Uploaded ({{ getFileNames('additionalDocuments').length }} files)</span>
+                      } @else {
+                        <span class="file-count">(None)</span>
+                      }
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
