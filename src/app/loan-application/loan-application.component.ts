@@ -74,7 +74,7 @@ export class LoanApplicationComponent implements OnInit {
   loanOfficers: LoanOfficer[] = [
     { id: 1, name: 'Michael DeMie', imageUrl: 'assets/loan-officers/michael_d.jpg' },
     { id: 2, name: 'Emilee Smith', imageUrl: 'assets/loan-officers/emilee_s.png' },
-    { id: 3, name: 'Phil Mendoza', imageUrl: 'assets/loan-officers/phil_m.jpeg' },
+    { id: 3, name: 'José "Hot Taco"  Mendoza', imageUrl: 'assets/loan-officers/phil_m.jpeg' },
   ];
   
   applicationSubmitted = false;
@@ -92,6 +92,11 @@ export class LoanApplicationComponent implements OnInit {
       if (params['officer']) {
         this.officerId = Number(params['officer']);
         this.selectedOfficer = this.loanOfficers.find(officer => officer.id === this.officerId) || null;
+        
+        // If coming directly from loan officer selection, scroll to top to show the full page
+        if (this.selectedOfficer) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
       }
     });
   }
@@ -170,6 +175,9 @@ export class LoanApplicationComponent implements OnInit {
       this.isRefinance = purpose === 'refinance';
       this.loanPurposeSelected = true;
       
+      // Always scroll to top when selecting loan purpose
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
       // Reset the property form values
       this.propertyInfoForm.reset({
         propertyType: ''
@@ -212,7 +220,24 @@ export class LoanApplicationComponent implements OnInit {
   
   previousStep(): void {
     if (this.currentStep > 1) {
+      const currentStep = this.currentStep;
       this.currentStep--;
+      
+      // On desktop, scroll to the application form top
+      // On mobile, only scroll when going back to first step
+      if (!this.isMobileDevice()) {
+        // Desktop behavior: always scroll to application form
+        const appForm = document.getElementById('application-form');
+        if (appForm) {
+          appForm.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else if (currentStep === 2) {
+        // Mobile behavior: only scroll when going back to first step
+        const scrollTarget = document.getElementById('scroll-target');
+        if (scrollTarget) {
+          scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
     }
   }
   
@@ -220,7 +245,24 @@ export class LoanApplicationComponent implements OnInit {
     const canProceed = this.validateCurrentStep();
     
     if (canProceed && this.currentStep < this.totalSteps) {
+      const previousStep = this.currentStep;
       this.currentStep++;
+      
+      // On desktop, scroll to the application form top
+      // On mobile, only scroll for the first step transition
+      if (!this.isMobileDevice()) {
+        // Desktop behavior: always scroll to application form
+        const appForm = document.getElementById('application-form');
+        if (appForm) {
+          appForm.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else if (previousStep === 1) {
+        // Mobile behavior: only scroll on first step
+        const scrollTarget = document.getElementById('scroll-target');
+        if (scrollTarget) {
+          scrollTarget.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
     }
   }
   
@@ -394,6 +436,9 @@ export class LoanApplicationComponent implements OnInit {
       */
       
       this.applicationSubmitted = true;
+      
+      // Scroll to top for success message - this one should go to the very top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
   
@@ -670,6 +715,11 @@ export class LoanApplicationComponent implements OnInit {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+  
+  // Check if we're on a mobile device
+  isMobileDevice(): boolean {
+    return window.innerWidth <= 768;
   }
   
   // Get file size for a specific control

@@ -310,6 +310,25 @@
     z-index: 1;
   }
   
+  // Mobile screens: make more compact
+  @media (max-width: 768px) {
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 10px; /* For scrollbar space */
+    
+    /* Center the steps container on mobile */
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+    
+    &:before {
+      left: 0;
+      right: auto;
+      width: 100%;
+      min-width: 600px; /* Ensure the line extends behind all steps */
+    }
+  }
+  
   .step-indicator {
     position: relative;
     z-index: 2;
@@ -318,6 +337,12 @@
     align-items: center;
     flex: 1;
     padding: 0 5px;
+    
+    @media (max-width: 768px) {
+      min-width: 100px; // Minimum width for steps
+      flex: 0 0 auto;
+      margin: 0 10px;
+    }
     
     .step-number {
       width: 50px;
@@ -341,6 +366,11 @@
       font-weight: 500;
       text-align: center;
       transition: all 0.3s ease;
+      
+      @media (max-width: 768px) {
+        // Hide step labels on mobile except for active step
+        display: none;
+      }
     }
     
     &.active {
@@ -353,6 +383,10 @@
       .step-label {
         color: #3498db;
         font-weight: 600;
+        
+        @media (max-width: 768px) {
+          display: block; // Show label for active step
+        }
       }
     }
     

@@ -73,7 +73,7 @@
   
   <!-- Application Form - Only show if not submitted and purpose is selected -->
   @if (!applicationSubmitted && loanPurposeSelected) {
-    <div class="application-form">
+    <div class="application-form" id="application-form">
       <!-- Selected Officer Info -->
       @if (selectedOfficer) {
         <div class="selected-officer">
@@ -91,7 +91,7 @@
       }
       
       <!-- Loan Purpose Indicator -->
-      <div class="loan-purpose-indicator">
+      <div class="loan-purpose-indicator" id="scroll-target">
         <div class="loan-type-pill">
           <span class="loan-type-icon">{{ isRefinance ? '💰' : '🏠' }}</span>
           <span>{{ isRefinance ? 'Refinance' : 'New Purchase' }}</span>
