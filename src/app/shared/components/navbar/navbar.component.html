@@ -1,0 +1,21 @@
+<nav class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-logo">
+      <a routerLink="/">
+        <div class="logo">IMS</div>
+      </a>
+    </div>
+    
+    <div class="navbar-links" [class.active]="isMenuOpen">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+      <a routerLink="/loan-officers" routerLinkActive="active">Loan Officers</a>
+      <a routerLink="/loan-application" routerLinkActive="active">Apply Now</a>
+    </div>
+    
+    <div class="navbar-mobile-toggle" (click)="toggleMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+</nav>

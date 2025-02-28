@@ -1,0 +1,225 @@
+.home-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+              url('/assets/images/home-hero.jpg') center/cover no-repeat;
+  color: white;
+  padding: 8rem 2rem;
+  text-align: center;
+  
+  .logo-container {
+    margin-bottom: 2rem;
+    
+    .logo {
+      background-color: white;
+      color: #1a3c61;
+      font-size: 2.5rem;
+      font-weight: bold;
+      width: 6rem;
+      height: 6rem;
+      border-radius: 50%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  }
+  
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 2.5rem;
+  }
+  
+  .cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+/* Services Section */
+.services {
+  padding: 5rem 2rem;
+  background-color: #f9f9f9;
+  text-align: center;
+  
+  h2 {
+    font-size: 2.5rem;
+    color: #1a3c61;
+    margin-bottom: 3rem;
+  }
+  
+  .service-cards {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    
+    .card {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      flex: 1;
+      min-width: 250px;
+      max-width: 350px;
+      transition: transform 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-10px);
+      }
+      
+      .card-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      
+      h3 {
+        color: #1a3c61;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+      
+      p {
+        color: #666;
+        line-height: 1.6;
+      }
+    }
+  }
+}
+
+/* Testimonials Section */
+.testimonials {
+  padding: 5rem 2rem;
+  text-align: center;
+  background-color: #1a3c61;
+  color: white;
+  
+  h2 {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+  }
+  
+  .testimonial-slider {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    
+    .testimonial-card {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: 8px;
+      flex: 1;
+      min-width: 280px;
+      max-width: 400px;
+      
+      .quote {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        font-style: italic;
+        margin-bottom: 1.5rem;
+      }
+      
+      .author {
+        font-weight: bold;
+        font-size: 1.1rem;
+      }
+      
+      .location {
+        opacity: 0.8;
+        margin-top: 0.3rem;
+      }
+    }
+  }
+}
+
+/* Contact CTA Section */
+.contact-cta {
+  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+              url('/assets/images/cta-bg.jpg') center/cover no-repeat;
+  padding: 5rem 2rem;
+  text-align: center;
+  color: white;
+  
+  .cta-content {
+    max-width: 700px;
+    margin: 0 auto;
+    
+    h2 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+  }
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  
+  &.btn-primary {
+    background-color: #e74c3c;
+    color: white;
+    
+    &:hover {
+      background-color: darken(#e74c3c, 10%);
+      transform: translateY(-3px);
+    }
+  }
+  
+  &.btn-secondary {
+    background-color: transparent;
+    color: white;
+    border: 2px solid white;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-3px);
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero {
+    padding: 6rem 1rem;
+    
+    h1 {
+      font-size: 2.5rem;
+    }
+    
+    h2 {
+      font-size: 1.3rem;
+    }
+  }
+  
+  .services h2,
+  .testimonials h2,
+  .contact-cta h2 {
+    font-size: 2rem;
+  }
+}

@@ -1,0 +1,62 @@
+<div class="home-container">
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="logo-container">
+        <!-- Placeholder for logo -->
+        <div class="logo">IMS</div>
+      </div>
+      <h1>Innovative Mortgage Solutions</h1>
+      <h2>Your Path to Home Ownership Starts Here</h2>
+      <div class="cta-buttons">
+        <a routerLink="/loan-application" class="btn btn-primary">Apply Now</a>
+        <a routerLink="/loan-officers" class="btn btn-secondary">Meet Our Team</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="services">
+    <h2>Our Mortgage Solutions</h2>
+    <div class="service-cards">
+      <div class="card">
+        <div class="card-icon">🏠</div>
+        <h3>Home Purchase</h3>
+        <p>Find the perfect financing solution for your new home purchase.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔄</div>
+        <h3>Refinancing</h3>
+        <p>Lower your interest rate or tap into your home's equity.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🏗️</div>
+        <h3>Construction Loans</h3>
+        <p>Finance your dream home from the ground up.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section class="testimonials">
+    <h2>What Our Clients Say</h2>
+    <div class="testimonial-slider">
+      @for (testimonial of testimonials; track $index) {
+        <div class="testimonial-card">
+          <p class="quote">"{{ testimonial.quote }}"</p>
+          <div class="author">{{ testimonial.author }}</div>
+          <div class="location">{{ testimonial.location }}</div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Contact/CTA Section -->
+  <section class="contact-cta">
+    <div class="cta-content">
+      <h2>Ready to Get Started?</h2>
+      <p>Take the first step toward your home financing goals today.</p>
+      <a routerLink="/loan-application" class="btn btn-primary">Apply for a Loan</a>
+    </div>
+  </section>
+</div>
