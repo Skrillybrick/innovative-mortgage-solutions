@@ -5,50 +5,56 @@
   </div>
   
   <div class="officers-grid">
-    <div class="officer-card" *ngFor="let officer of loanOfficers" (click)="openModal(officer)">
-      <div class="card-content">
-        <div class="profile-image">
-          <img [src]="officer.imageUrl" [alt]="officer.name" onerror="this.src='assets/loan-officers/placeholder-profile.png'">
-        </div>
-        <div class="officer-info">
-          <h2 class="officer-name">{{officer.name}}</h2>
-          <p class="officer-title">{{officer.title}}</p>
-        </div>
-        <div class="view-profile">
-          <span>View Profile</span>
+    @for (officer of loanOfficers; track officer.id) {
+      <div class="officer-card" (click)="openModal(officer)">
+        <div class="card-content">
+          <div class="profile-image">
+            <img [src]="officer.imageUrl" [alt]="officer.name" onerror="this.src='assets/loan-officers/placeholder-profile.png'">
+          </div>
+          <div class="officer-info">
+            <h2 class="officer-name">{{officer.name}}</h2>
+            <p class="officer-title">{{officer.title}}</p>
+          </div>
+          <div class="view-profile">
+            <span>View Profile</span>
+          </div>
         </div>
       </div>
-    </div>
+    }
   </div>
 </div>
 
 <!-- Modal Overlay -->
-<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()"></div>
+@if (showModal) {
+  <div class="modal-overlay" (click)="closeModal()"></div>
+}
 
 <!-- Modal -->
-<div class="modal" *ngIf="showModal && selectedOfficer">
-  <div class="modal-content">
-    <button class="close-button" (click)="closeModal()">&times;</button>
-    
-    <div class="modal-header">
-      <div class="modal-profile-image">
-        <img [src]="selectedOfficer.imageUrl" [alt]="selectedOfficer.name" onerror="this.src='assets/loan-officers/placeholder-profile.png'">
-      </div>
-      <div class="modal-officer-info">
-        <h2 class="modal-officer-name">{{selectedOfficer.name}}</h2>
-        <p class="modal-officer-title">{{selectedOfficer.title}}</p>
-      </div>
-    </div>
-    
-    <div class="modal-body">
-      <p class="officer-bio">{{selectedOfficer.bio}}</p>
+@if (showModal && selectedOfficer) {
+  <div class="modal">
+    <div class="modal-content">
+      <button class="close-button" (click)="closeModal()">&times;</button>
       
-      <div class="action-buttons">
-        <a [routerLink]="['/loan-application']" [queryParams]="{officer: selectedOfficer.id}" class="apply-button">
-          Apply with {{selectedOfficer.name.split(' ')[0]}}
-        </a>
-        <button class="contact-button">Contact</button>
+      <div class="modal-header">
+        <div class="modal-profile-image">
+          <img [src]="selectedOfficer.imageUrl" [alt]="selectedOfficer.name" onerror="this.src='assets/loan-officers/placeholder-profile.png'">
+        </div>
+        <div class="modal-officer-info">
+          <h2 class="modal-officer-name">{{selectedOfficer.name}}</h2>
+          <p class="modal-officer-title">{{selectedOfficer.title}}</p>
+        </div>
+      </div>
+      
+      <div class="modal-body">
+        <p class="officer-bio">{{selectedOfficer.bio}}</p>
+        
+        <div class="action-buttons">
+          <a [routerLink]="['/loan-application']" [queryParams]="{officer: selectedOfficer.id}" class="apply-button">
+            Apply with {{selectedOfficer.name.split(' ')[0]}}
+          </a>
+          <button class="contact-button">Contact</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
+}
