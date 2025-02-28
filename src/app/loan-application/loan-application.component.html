@@ -1,4 +1,19 @@
 <div class="loan-application-container">
-  <h1>Loan Application</h1>
-  <p>This is a placeholder for the Loan Application page</p>
+  <div class="page-header">
+    <h1>Loan Application</h1>
+    <p class="subtitle" *ngIf="officerId">You're applying with one of our experienced loan officers</p>
+    <p class="subtitle" *ngIf="!officerId">Complete the form below to start your mortgage application</p>
+  </div>
+  
+  <div class="application-form">
+    <!-- This is a placeholder for the actual form that would be implemented -->
+    <p class="form-note">Application form will be added here. Currently displaying as a placeholder.</p>
+    
+    <div class="application-info" *ngIf="officerId">
+      <div class="info-box">
+        <h3>Your selected loan officer (ID: {{officerId}})</h3>
+        <p>Your application will be handled personally by this loan officer.</p>
+      </div>
+    </div>
+  </div>
 </div>

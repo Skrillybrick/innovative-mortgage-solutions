@@ -1,18 +1,18 @@
 <nav class="navbar">
   <div class="navbar-container">
     <div class="navbar-logo">
-      <a routerLink="/">
+      <a routerLink="/" (click)="closeMenu()">
         <img src="assets/svg/IMS_Logo.svg" alt="IMS Logo" class="logo-image" />
       </a>
     </div>
     
     <div class="navbar-links" [class.active]="isMenuOpen">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-      <a routerLink="/loan-officers" routerLinkActive="active">Loan Officers</a>
-      <a routerLink="/loan-application" routerLinkActive="active">Apply Now</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMenu()">Home</a>
+      <a routerLink="/loan-officers" routerLinkActive="active" (click)="closeMenu()">Loan Officers</a>
+      <a routerLink="/loan-application" routerLinkActive="active" (click)="closeMenu()">Apply Now</a>
     </div>
     
-    <div class="navbar-mobile-toggle" (click)="toggleMenu()">
+    <div class="navbar-mobile-toggle" (click)="toggleMenu()" [class.active]="isMenuOpen">
       <span></span>
       <span></span>
       <span></span>

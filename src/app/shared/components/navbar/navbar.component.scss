@@ -69,6 +69,8 @@
   flex-direction: column;
   gap: 6px;
   cursor: pointer;
+  padding: 5px;
+  z-index: 1002;
   
   span {
     display: block;
@@ -77,6 +79,23 @@
     background-color: white;
     border-radius: 3px;
     transition: all 0.3s ease;
+    transform-origin: center;
+  }
+  
+  &.active {
+    span {
+      &:nth-child(1) {
+        transform: translateY(9px) rotate(45deg);
+      }
+      
+      &:nth-child(2) {
+        opacity: 0;
+      }
+      
+      &:nth-child(3) {
+        transform: translateY(-9px) rotate(-45deg);
+      }
+    }
   }
 }
 
