@@ -1,12 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
 
 interface LoanOfficer {
   id: number;
   name: string;
   imageUrl: string;
+}
+
+interface PreviousResidence {
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  residenceType: string;
+  years: number;
+  months: number;
+  monthlyPayment: number;
 }
 
 @Component({
@@ -27,10 +38,11 @@ export class LoanApplicationComponent implements OnInit {
   
   // Form variables
   currentStep = 1;
-  totalSteps = 4;
+  totalSteps = 5;
   personalInfoForm!: FormGroup;
   propertyInfoForm!: FormGroup;
   financialInfoForm!: FormGroup;
+  livingHistoryForm!: FormGroup;
   documentationForm!: FormGroup;
   
   // Dropdown options
@@ -128,6 +140,18 @@ export class LoanApplicationComponent implements OnInit {
       creditScore: ['', [Validators.required]],
       monthlyDebt: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
       loanType: ['', [Validators.required]]
+    });
+    
+    // Living History Form
+    this.livingHistoryForm = this.fb.group({
+      // Current residence
+      currentResidenceType: ['', [Validators.required]],
+      currentResidenceYears: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+      currentResidenceMonths: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+      currentMonthlyPayment: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
+      
+      // Previous residences array (required if current residence is less than 2 years)
+      previousResidences: this.fb.array([])
     });
     
     // Documentation Form
@@ -231,6 +255,40 @@ export class LoanApplicationComponent implements OnInit {
       case 3:
         return this.financialInfoForm.valid;
       case 4:
+        // Check required fields for current residence
+        const currentResidenceValid = 
+          this.livingHistoryForm.get('currentResidenceType')!.valid &&
+          this.livingHistoryForm.get('currentResidenceYears')!.valid &&
+          this.livingHistoryForm.get('currentResidenceMonths')!.valid &&
+          this.livingHistoryForm.get('currentMonthlyPayment')!.valid;
+          
+        // Get total months at current residence
+        const totalMonths = this.getTotalMonthsAtCurrentResidence();
+        
+        // If less than 24 months at current residence, check previous residences
+        if (totalMonths < 24) {
+          // First, check if we have at least one previous residence
+          if (this.previousResidences.length === 0) {
+            return false;
+          }
+          
+          // Check if all previous residences are valid
+          let allPreviousResidencesValid = true;
+          for (let i = 0; i < this.previousResidences.length; i++) {
+            if (!this.previousResidences.at(i).valid) {
+              allPreviousResidencesValid = false;
+              break;
+            }
+          }
+          
+          // Check if we have enough residence history (at least 24 months total)
+          const hasEnoughHistory = this.hasEnoughResidenceHistory();
+          
+          return currentResidenceValid && allPreviousResidencesValid && hasEnoughHistory;
+        }
+        
+        return currentResidenceValid;
+      case 5:
         return this.documentationForm.valid;
       default:
         return false;
@@ -244,6 +302,13 @@ export class LoanApplicationComponent implements OnInit {
       console.log('Form values:', this.propertyInfoForm.value);
       console.log('Form errors:', this.getFormValidationErrors(this.propertyInfoForm));
     }
+    
+    if (this.currentStep === 4) {
+      console.log('Living History form valid:', this.livingHistoryForm.valid);
+      console.log('Form values:', this.livingHistoryForm.value);
+      console.log('Form errors:', this.getFormValidationErrors(this.livingHistoryForm));
+    }
+    
     return this.validateCurrentStep();
   }
   
@@ -267,6 +332,7 @@ export class LoanApplicationComponent implements OnInit {
       console.log('Personal Info:', this.personalInfoForm.value);
       console.log('Property Info:', this.propertyInfoForm.value);
       console.log('Financial Info:', this.financialInfoForm.value);
+      console.log('Living History:', this.livingHistoryForm.value);
       console.log('Documentation:', this.documentationForm.value);
       
       this.applicationSubmitted = true;
@@ -286,6 +352,8 @@ export class LoanApplicationComponent implements OnInit {
       case 3:
         return 'Financial Information';
       case 4:
+        return 'Living History';
+      case 5:
         return 'Documentation & Review';
       default:
         return '';
@@ -316,10 +384,87 @@ export class LoanApplicationComponent implements OnInit {
     ];
   }
   
+  // Residence type options for living history
+  getResidenceTypes(): {value: string, label: string}[] {
+    return [
+      { value: 'own', label: 'Own' },
+      { value: 'rent', label: 'Rent' },
+      { value: 'living-with-family', label: 'Living with Family' },
+      { value: 'military-housing', label: 'Military Housing' },
+      { value: 'other', label: 'Other' }
+    ];
+  }
+  
   // Helper for control validation
   hasError(formGroup: FormGroup, controlName: string, errorType: string): boolean {
     const control = formGroup.get(controlName);
     return control !== null && control.hasError(errorType) && (control.dirty || control.touched);
+  }
+  
+  // Helper to get total months at current residence
+  getTotalMonthsAtCurrentResidence(): number {
+    const years = parseInt(this.livingHistoryForm.get('currentResidenceYears')?.value || '0');
+    const months = parseInt(this.livingHistoryForm.get('currentResidenceMonths')?.value || '0');
+    return (years * 12) + months;
+  }
+  
+  // Helper to update previous residence validators based on current residence duration
+  // Access the previous residences form array
+  get previousResidences() {
+    return this.livingHistoryForm.get('previousResidences') as FormArray;
+  }
+  
+  // Create a new previous residence form group
+  createPreviousResidenceFormGroup(): FormGroup {
+    return this.fb.group({
+      address: ['', [Validators.required]],
+      city: ['', [Validators.required]],
+      state: ['', [Validators.required]],
+      zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}(-\d{4})?$/)]],
+      residenceType: ['', [Validators.required]],
+      years: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+      months: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+      monthlyPayment: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]]
+    });
+  }
+  
+  // Add a new previous residence
+  addPreviousResidence(): void {
+    this.previousResidences.push(this.createPreviousResidenceFormGroup());
+  }
+  
+  // Remove a previous residence
+  removePreviousResidence(index: number): void {
+    this.previousResidences.removeAt(index);
+  }
+  
+  // Calculate total months of residence history
+  getTotalResidenceHistoryMonths(): number {
+    let totalMonths = this.getTotalMonthsAtCurrentResidence();
+    
+    // Add months from all previous residences
+    for (let i = 0; i < this.previousResidences.length; i++) {
+      const previousResidence = this.previousResidences.at(i) as FormGroup;
+      const years = parseInt(previousResidence.get('years')?.value || '0');
+      const months = parseInt(previousResidence.get('months')?.value || '0');
+      totalMonths += (years * 12) + months;
+    }
+    
+    return totalMonths;
+  }
+  
+  // Check if we have enough residence history (at least 24 months)
+  hasEnoughResidenceHistory(): boolean {
+    return this.getTotalResidenceHistoryMonths() >= 24;
+  }
+  
+  updatePreviousResidenceValidators(): void {
+    const totalMonths = this.getTotalMonthsAtCurrentResidence();
+    
+    // If less than 24 months at current residence and no previous residences yet, add one
+    if (totalMonths < 24 && this.previousResidences.length === 0) {
+      this.addPreviousResidence();
+    }
   }
   
   resetLoanPurpose(): void {

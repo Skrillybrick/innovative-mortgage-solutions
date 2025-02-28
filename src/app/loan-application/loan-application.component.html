@@ -101,7 +101,7 @@
       
       <!-- Progress Steps -->
       <div class="progress-steps">
-        @for (step of [1, 2, 3, 4]; track step) {
+        @for (step of [1, 2, 3, 4, 5]; track step) {
           <div class="step-indicator" 
                [class.active]="currentStep === step"
                [class.completed]="currentStep > step">
@@ -494,8 +494,224 @@
         </form>
       }
       
-      <!-- Step 4: Documentation & Review -->
+      <!-- Step 4: Living History -->
       @if (currentStep === 4) {
+        <form [formGroup]="livingHistoryForm">
+          <div class="form-section">
+            <h2>Living History</h2>
+            <p class="section-subtitle">
+              Please provide your residence history for the past two years. This information is required for mortgage underwriting.
+            </p>
+            
+            <div class="history-section">
+              <h3>Current Residence</h3>
+              
+              <div class="form-group">
+                <label for="currentResidenceType">Current Housing Situation <span class="required">*</span></label>
+                <select id="currentResidenceType" formControlName="currentResidenceType" (change)="updatePreviousResidenceValidators()">
+                  <option value="">Select Housing Status</option>
+                  @for (type of getResidenceTypes(); track type.value) {
+                    <option [value]="type.value">{{type.label}}</option>
+                  }
+                </select>
+                @if (hasError(livingHistoryForm, 'currentResidenceType', 'required')) {
+                  <div class="error-message">
+                    Current housing situation is required
+                  </div>
+                }
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="currentResidenceYears">Years at Current Address <span class="required">*</span></label>
+                  <input type="number" min="0" max="99" id="currentResidenceYears" formControlName="currentResidenceYears" (change)="updatePreviousResidenceValidators()">
+                  @if (hasError(livingHistoryForm, 'currentResidenceYears', 'required')) {
+                    <div class="error-message">
+                      Years is required
+                    </div>
+                  }
+                  @if (hasError(livingHistoryForm, 'currentResidenceYears', 'pattern')) {
+                    <div class="error-message">
+                      Please enter a valid number
+                    </div>
+                  }
+                </div>
+                <div class="form-group">
+                  <label for="currentResidenceMonths">Months <span class="required">*</span></label>
+                  <input type="number" min="0" max="11" id="currentResidenceMonths" formControlName="currentResidenceMonths" (change)="updatePreviousResidenceValidators()">
+                  @if (hasError(livingHistoryForm, 'currentResidenceMonths', 'required')) {
+                    <div class="error-message">
+                      Months is required
+                    </div>
+                  }
+                  @if (hasError(livingHistoryForm, 'currentResidenceMonths', 'pattern')) {
+                    <div class="error-message">
+                      Please enter a valid number
+                    </div>
+                  }
+                </div>
+                <div class="form-group">
+                  <label for="currentMonthlyPayment">Monthly Payment/Rent ($) <span class="required">*</span></label>
+                  <input type="text" id="currentMonthlyPayment" formControlName="currentMonthlyPayment">
+                  @if (hasError(livingHistoryForm, 'currentMonthlyPayment', 'required')) {
+                    <div class="error-message">
+                      Monthly payment is required
+                    </div>
+                  }
+                  @if (hasError(livingHistoryForm, 'currentMonthlyPayment', 'pattern')) {
+                    <div class="error-message">
+                      Please enter a valid amount
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+            
+            <!-- Previous Residences section - only show if current residence is less than 2 years -->
+            @if (getTotalMonthsAtCurrentResidence() && getTotalMonthsAtCurrentResidence() < 24) {
+              <div class="history-section previous-residences">
+                <h3>Previous Residences</h3>
+                <p class="requirement-note">
+                  Since you've been at your current address for less than 2 years, we need your previous address information to cover a full 2-year history.
+                  <strong>Current residence duration: {{ getTotalMonthsAtCurrentResidence() }} months</strong>
+                </p>
+                
+                <div class="residence-history-status" [class.complete]="hasEnoughResidenceHistory()">
+                  <div class="status-icon">{{ hasEnoughResidenceHistory() ? '✓' : '!' }}</div>
+                  <div class="status-message">
+                    @if (hasEnoughResidenceHistory()) {
+                      <span>Your residence history covers the required 2-year period ({{ getTotalResidenceHistoryMonths() }} months).</span>
+                    } @else {
+                      <span>You need to provide {{ 24 - getTotalResidenceHistoryMonths() }} more months of residence history.</span>
+                    }
+                  </div>
+                </div>
+                
+                <!-- Iterate through previous residences -->
+                <div formArrayName="previousResidences">
+                  @for (residence of previousResidences.controls; track $index) {
+                    <div class="previous-residence-item" [formGroupName]="$index">
+                      <div class="residence-header">
+                        <h4>Previous Address {{ $index + 1 }}</h4>
+                        @if (previousResidences.length > 1) {
+                          <button type="button" class="btn-remove" (click)="removePreviousResidence($index)">
+                            <span>×</span> Remove
+                          </button>
+                        }
+                      </div>
+                      
+                      <div class="form-group">
+                        <label [for]="'address-' + $index">Street Address <span class="required">*</span></label>
+                        <input type="text" [id]="'address-' + $index" formControlName="address">
+                        @if (residence.get('address')?.invalid && (residence.get('address')?.dirty || residence.get('address')?.touched)) {
+                          <div class="error-message">
+                            Address is required
+                          </div>
+                        }
+                      </div>
+                      
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label [for]="'city-' + $index">City <span class="required">*</span></label>
+                          <input type="text" [id]="'city-' + $index" formControlName="city">
+                          @if (residence.get('city')?.invalid && (residence.get('city')?.dirty || residence.get('city')?.touched)) {
+                            <div class="error-message">
+                              City is required
+                            </div>
+                          }
+                        </div>
+                        <div class="form-group">
+                          <label [for]="'state-' + $index">State <span class="required">*</span></label>
+                          <input type="text" [id]="'state-' + $index" formControlName="state">
+                          @if (residence.get('state')?.invalid && (residence.get('state')?.dirty || residence.get('state')?.touched)) {
+                            <div class="error-message">
+                              State is required
+                            </div>
+                          }
+                        </div>
+                        <div class="form-group">
+                          <label [for]="'zipCode-' + $index">ZIP Code <span class="required">*</span></label>
+                          <input type="text" [id]="'zipCode-' + $index" formControlName="zipCode">
+                          @if (residence.get('zipCode')?.errors?.['required'] && (residence.get('zipCode')?.dirty || residence.get('zipCode')?.touched)) {
+                            <div class="error-message">
+                              ZIP code is required
+                            </div>
+                          }
+                          @if (residence.get('zipCode')?.errors?.['pattern'] && (residence.get('zipCode')?.dirty || residence.get('zipCode')?.touched)) {
+                            <div class="error-message">
+                              Please enter a valid ZIP code
+                            </div>
+                          }
+                        </div>
+                      </div>
+                      
+                      <div class="form-group">
+                        <label [for]="'residenceType-' + $index">Housing Situation <span class="required">*</span></label>
+                        <select [id]="'residenceType-' + $index" formControlName="residenceType">
+                          <option value="">Select Housing Status</option>
+                          @for (type of getResidenceTypes(); track type.value) {
+                            <option [value]="type.value">{{type.label}}</option>
+                          }
+                        </select>
+                        @if (residence.get('residenceType')?.invalid && (residence.get('residenceType')?.dirty || residence.get('residenceType')?.touched)) {
+                          <div class="error-message">
+                            Housing situation is required
+                          </div>
+                        }
+                      </div>
+                      
+                      <div class="form-row">
+                        <div class="form-group">
+                          <label [for]="'years-' + $index">Years at This Address <span class="required">*</span></label>
+                          <input type="number" min="0" max="99" [id]="'years-' + $index" formControlName="years">
+                          @if (residence.get('years')?.invalid && (residence.get('years')?.dirty || residence.get('years')?.touched)) {
+                            <div class="error-message">
+                              Years is required
+                            </div>
+                          }
+                        </div>
+                        <div class="form-group">
+                          <label [for]="'months-' + $index">Months <span class="required">*</span></label>
+                          <input type="number" min="0" max="11" [id]="'months-' + $index" formControlName="months">
+                          @if (residence.get('months')?.invalid && (residence.get('months')?.dirty || residence.get('months')?.touched)) {
+                            <div class="error-message">
+                              Months is required
+                            </div>
+                          }
+                        </div>
+                        <div class="form-group">
+                          <label [for]="'monthlyPayment-' + $index">Monthly Payment/Rent ($) <span class="required">*</span></label>
+                          <input type="text" [id]="'monthlyPayment-' + $index" formControlName="monthlyPayment">
+                          @if (residence.get('monthlyPayment')?.invalid && (residence.get('monthlyPayment')?.dirty || residence.get('monthlyPayment')?.touched)) {
+                            <div class="error-message">
+                              Monthly payment is required
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+                
+                <div class="add-residence-container">
+                  <button type="button" class="btn-add-residence" (click)="addPreviousResidence()">
+                    + Add Another Previous Residence
+                  </button>
+                  
+                  @if (!hasEnoughResidenceHistory()) {
+                    <div class="add-residence-warning">
+                      Please add more residence history to cover the full 2-year period.
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </form>
+      }
+      
+      <!-- Step 5: Documentation & Review -->
+      @if (currentStep === 5) {
         <form [formGroup]="documentationForm">
           <div class="form-section">
             <h2>Documentation & Review</h2>
@@ -522,7 +738,7 @@
               <div class="document-item">
                 <label class="checkbox-label">
                   <input type="checkbox" formControlName="proofOfIncomeUploaded"> 
-                  Proof of Income (W-2, pay stubs, tax returns)
+                  Proof of Income (2 years of W-2s, last 3 pay stubs)
                   <span class="required">*</span>
                 </label>
                 @if (hasError(documentationForm, 'proofOfIncomeUploaded', 'required')) {
@@ -567,6 +783,42 @@
                   <span class="label">Application Type:</span>
                   <span class="value">{{ isRefinance ? 'Refinance' : 'New Purchase' }}</span>
                 </div>
+                
+                <!-- Add living history information to summary -->
+                <div class="summary-item">
+                  <span class="label">Current Housing:</span>
+                  <span class="value">
+                    {{ livingHistoryForm.get('currentResidenceYears')?.value || '0' }} years, 
+                    {{ livingHistoryForm.get('currentResidenceMonths')?.value || '0' }} months
+                    ({{ livingHistoryForm.get('currentResidenceType')?.value || 'Not specified' }})
+                  </span>
+                </div>
+                
+                @if (previousResidences.length > 0) {
+                  <div class="summary-item">
+                    <span class="label">Previous Residences:</span>
+                    <div class="value">
+                      @for (residence of previousResidences.controls; track $index) {
+                        <div class="previous-residence-summary">
+                          <strong>Previous Address {{ $index + 1}}:</strong> 
+                          {{ residence.get('years')?.value || '0' }} years, 
+                          {{ residence.get('months')?.value || '0' }} months
+                          ({{ residence.get('residenceType')?.value || 'Not specified' }})
+                        </div>
+                      }
+                    </div>
+                  </div>
+                  
+                  <div class="summary-item">
+                    <span class="label">Total History:</span>
+                    <span class="value">
+                      {{ getTotalResidenceHistoryMonths() }} months 
+                      <span [class.complete-text]="hasEnoughResidenceHistory()" [class.incomplete-text]="!hasEnoughResidenceHistory()">
+                        ({{ hasEnoughResidenceHistory() ? 'Complete' : 'Incomplete' }})
+                      </span>
+                    </span>
+                  </div>
+                }
               </div>
             </div>
           </div>
