@@ -21,15 +21,12 @@
 .navbar-logo {
   a {
     text-decoration: none;
-    color: white;
+    display: block;
     
-    .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: white;
-      border: 2px solid white;
-      padding: 0.3rem 0.6rem;
-      border-radius: 4px;
+    .logo-image {
+      height: 40px;
+      width: auto;
+      display: block;
     }
   }
 }

@@ -20,19 +20,12 @@
 .footer-logo {
   margin-bottom: 2rem;
   
-  .logo {
-    font-size: 2rem;
-    font-weight: bold;
-    color: white;
-    border: 2px solid white;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+  .logo-image {
+    height: 42px;
+    width: auto;
+    display: block;
     margin-bottom: 1rem;
-    display: inline-block;
-  }
-
-  p {
-    font-size: 1.2rem;
+    //filter: brightness(0) invert(1); /* Make the logo white */
   }
 }
 
