@@ -1,19 +1,488 @@
 <div class="loan-application-container">
   <div class="page-header">
     <h1>Loan Application</h1>
-    <p class="subtitle" *ngIf="officerId">You're applying with one of our experienced loan officers</p>
-    <p class="subtitle" *ngIf="!officerId">Complete the form below to start your mortgage application</p>
+    <p class="subtitle" *ngIf="selectedOfficer">
+      You're applying with <span class="officer-name">{{selectedOfficer.name}}</span>
+    </p>
+    <p class="subtitle" *ngIf="!selectedOfficer">Complete the form below to start your mortgage application</p>
   </div>
   
-  <div class="application-form">
-    <!-- This is a placeholder for the actual form that would be implemented -->
-    <p class="form-note">Application form will be added here. Currently displaying as a placeholder.</p>
-    
-    <div class="application-info" *ngIf="officerId">
+  <!-- Application Success Message -->
+  <div class="success-message" *ngIf="applicationSubmitted">
+    <div class="success-icon">✓</div>
+    <h2>Application Submitted Successfully!</h2>
+    <p>Thank you for your application. {{ selectedOfficer ? selectedOfficer.name : 'One of our loan officers' }} will contact you shortly to discuss the next steps.</p>
+    <button class="btn-home" (click)="navigateToHome()">Return to Home Page</button>
+  </div>
+  
+  <!-- Loan Purpose Selection - Only show if not submitted and purpose not selected -->
+  <div class="application-form loan-purpose-form" *ngIf="!applicationSubmitted && !loanPurposeSelected">
+    <div class="form-section">
+      <h2>What type of mortgage are you interested in?</h2>
+      <p>This will help us tailor the application to your specific needs</p>
+      
+      <form [formGroup]="loanPurposeForm">
+        <div class="loan-purpose-options">
+          <div class="purpose-option">
+            <label class="radio-card">
+              <input type="radio" formControlName="purpose" value="purchase">
+              <div class="card-content">
+                <div class="icon">🏠</div>
+                <h3>New Purchase</h3>
+                <p>I want to buy a new home</p>
+              </div>
+            </label>
+          </div>
+          
+          <div class="purpose-option">
+            <label class="radio-card">
+              <input type="radio" formControlName="purpose" value="refinance">
+              <div class="card-content">
+                <div class="icon">💰</div>
+                <h3>Refinance</h3>
+                <p>I want to refinance my current mortgage</p>
+              </div>
+            </label>
+          </div>
+        </div>
+        
+        <div class="error-message purpose-error" *ngIf="hasError(loanPurposeForm, 'purpose', 'required') && loanPurposeForm.get('purpose')?.touched">
+          Please select an option to continue
+        </div>
+        
+        <div class="form-navigation purpose-navigation">
+          <button 
+            class="btn-next" 
+            [disabled]="!loanPurposeForm.valid"
+            (click)="selectLoanPurpose()">
+            Continue
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Application Form - Only show if not submitted and purpose is selected -->
+  <div class="application-form" *ngIf="!applicationSubmitted && loanPurposeSelected">
+    <!-- Selected Officer Info -->
+    <div class="selected-officer" *ngIf="selectedOfficer">
       <div class="info-box">
-        <h3>Your selected loan officer (ID: {{officerId}})</h3>
-        <p>Your application will be handled personally by this loan officer.</p>
+        <div class="officer-image">
+          <img [src]="selectedOfficer.imageUrl" [alt]="selectedOfficer.name" onerror="this.src='assets/loan-officers/placeholder-profile.png'">
+        </div>
+        <div class="officer-details">
+          <h3>Your selected loan officer:</h3>
+          <p class="officer-name">{{selectedOfficer.name}}</p>
+          <p class="officer-note">Your application will be handled personally by this loan officer.</p>
+        </div>
       </div>
+    </div>
+    
+    <!-- Loan Purpose Indicator -->
+    <div class="loan-purpose-indicator">
+      <div class="loan-type-pill">
+        <span class="loan-type-icon">{{ isRefinance ? '💰' : '🏠' }}</span>
+        <span>{{ isRefinance ? 'Refinance' : 'New Purchase' }}</span>
+      </div>
+      <button class="change-btn" (click)="resetLoanPurpose()">Change</button>
+    </div>
+    
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+      <div class="step-indicator" 
+           *ngFor="let step of [1, 2, 3, 4]" 
+           [class.active]="currentStep === step"
+           [class.completed]="currentStep > step">
+        <div class="step-number">
+          <span *ngIf="currentStep <= step">{{step}}</span>
+          <span *ngIf="currentStep > step">✓</span>
+        </div>
+        <div class="step-label">{{getStepTitle(step)}}</div>
+      </div>
+    </div>
+    
+    <!-- Step 1: Personal Information -->
+    <form [formGroup]="personalInfoForm" *ngIf="currentStep === 1">
+      <div class="form-section">
+        <h2>Personal Information</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name <span class="required">*</span></label>
+            <input type="text" id="firstName" formControlName="firstName">
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'firstName', 'required')">
+              First name is required
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name <span class="required">*</span></label>
+            <input type="text" id="lastName" formControlName="lastName">
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'lastName', 'required')">
+              Last name is required
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="email">Email Address <span class="required">*</span></label>
+            <input type="email" id="email" formControlName="email">
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'email', 'required')">
+              Email is required
+            </div>
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'email', 'email')">
+              Please enter a valid email address
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number <span class="required">*</span></label>
+            <input type="tel" id="phone" formControlName="phone">
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'phone', 'required')">
+              Phone number is required
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="address">Street Address <span class="required">*</span></label>
+          <input type="text" id="address" formControlName="address">
+          <div class="error-message" *ngIf="hasError(personalInfoForm, 'address', 'required')">
+            Address is required
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="city">City <span class="required">*</span></label>
+            <input type="text" id="city" formControlName="city">
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'city', 'required')">
+              City is required
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="state">State <span class="required">*</span></label>
+            <input type="text" id="state" formControlName="state">
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'state', 'required')">
+              State is required
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="zipCode">ZIP Code <span class="required">*</span></label>
+            <input type="text" id="zipCode" formControlName="zipCode">
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'zipCode', 'required')">
+              ZIP code is required
+            </div>
+            <div class="error-message" *ngIf="hasError(personalInfoForm, 'zipCode', 'pattern')">
+              Please enter a valid ZIP code
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+    
+    <!-- Step 2: Property Information -->
+    <form [formGroup]="propertyInfoForm" *ngIf="currentStep === 2">
+      <div class="form-section">
+        <h2>{{ isRefinance ? 'Property & Refinance Details' : 'Property Details' }}</h2>
+        
+        <!-- Common fields for both new purchase and refinance -->
+        <div class="form-group">
+          <label for="propertyType">Property Type <span class="required">*</span></label>
+          <select id="propertyType" formControlName="propertyType">
+            <option value="">Select Property Type</option>
+            <option *ngFor="let type of propertyTypes" [value]="type.value">{{type.label}}</option>
+          </select>
+          <div class="error-message" *ngIf="hasError(propertyInfoForm, 'propertyType', 'required')">
+            Property type is required
+          </div>
+        </div>
+        
+        <!-- New Purchase specific fields -->
+        <ng-container *ngIf="!isRefinance">
+          <div class="form-group">
+            <label for="propertyAddress">Property Address <span class="required">*</span></label>
+            <input type="text" id="propertyAddress" formControlName="propertyAddress">
+            <div class="error-message" *ngIf="hasError(propertyInfoForm, 'propertyAddress', 'required')">
+              Property address is required
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="propertyCity">City <span class="required">*</span></label>
+              <input type="text" id="propertyCity" formControlName="propertyCity">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'propertyCity', 'required')">
+                City is required
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="propertyState">State <span class="required">*</span></label>
+              <input type="text" id="propertyState" formControlName="propertyState">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'propertyState', 'required')">
+                State is required
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="propertyZipCode">ZIP Code <span class="required">*</span></label>
+              <input type="text" id="propertyZipCode" formControlName="propertyZipCode">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'propertyZipCode', 'required')">
+                ZIP code is required
+              </div>
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'propertyZipCode', 'pattern')">
+                Please enter a valid ZIP code
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="purchasePrice">Purchase Price ($) <span class="required">*</span></label>
+              <input type="text" id="purchasePrice" formControlName="purchasePrice">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'purchasePrice', 'required')">
+                Purchase price is required
+              </div>
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'purchasePrice', 'pattern')">
+                Please enter a valid amount
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="downPayment">Down Payment ($) <span class="required">*</span></label>
+              <input type="text" id="downPayment" formControlName="downPayment">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'downPayment', 'required')">
+                Down payment is required
+              </div>
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'downPayment', 'pattern')">
+                Please enter a valid amount
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        
+        <!-- Refinance specific fields -->
+        <ng-container *ngIf="isRefinance">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="currentValue">Current Property Value ($) <span class="required">*</span></label>
+              <input type="text" id="currentValue" formControlName="currentValue">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'currentValue', 'required')">
+                Property value is required
+              </div>
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'currentValue', 'pattern')">
+                Please enter a valid amount
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="currentLoanBalance">Current Loan Balance ($) <span class="required">*</span></label>
+              <input type="text" id="currentLoanBalance" formControlName="currentLoanBalance">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'currentLoanBalance', 'required')">
+                Current loan balance is required
+              </div>
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'currentLoanBalance', 'pattern')">
+                Please enter a valid amount
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="refinanceReason">Primary Reason for Refinancing <span class="required">*</span></label>
+            <select id="refinanceReason" formControlName="refinanceReason">
+              <option value="">Select Reason</option>
+              <option *ngFor="let reason of getRefinanceReasons()" [value]="reason.value">{{reason.label}}</option>
+            </select>
+            <div class="error-message" *ngIf="hasError(propertyInfoForm, 'refinanceReason', 'required')">
+              Refinance reason is required
+            </div>
+          </div>
+          
+          <!-- For refinance, we still need purchase price and down payment fields with different labels -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="purchasePrice">Cash Out Amount ($) <span class="required">*</span></label>
+              <input type="text" id="purchasePrice" formControlName="purchasePrice">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'purchasePrice', 'required')">
+                Cash out amount is required
+              </div>
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'purchasePrice', 'pattern')">
+                Please enter a valid amount
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="downPayment">Years Remaining on Current Loan <span class="required">*</span></label>
+              <input type="text" id="downPayment" formControlName="downPayment">
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'downPayment', 'required')">
+                This field is required
+              </div>
+              <div class="error-message" *ngIf="hasError(propertyInfoForm, 'downPayment', 'pattern')">
+                Please enter a valid number
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </form>
+    
+    <!-- Step 3: Financial Information -->
+    <form [formGroup]="financialInfoForm" *ngIf="currentStep === 3">
+      <div class="form-section">
+        <h2>Financial Information</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="annualIncome">Annual Income ($) <span class="required">*</span></label>
+            <input type="text" id="annualIncome" formControlName="annualIncome">
+            <div class="error-message" *ngIf="hasError(financialInfoForm, 'annualIncome', 'required')">
+              Annual income is required
+            </div>
+            <div class="error-message" *ngIf="hasError(financialInfoForm, 'annualIncome', 'pattern')">
+              Please enter a valid amount
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="monthlyDebt">Monthly Debt Payments ($) <span class="required">*</span></label>
+            <input type="text" id="monthlyDebt" formControlName="monthlyDebt">
+            <div class="error-message" *ngIf="hasError(financialInfoForm, 'monthlyDebt', 'required')">
+              Monthly debt is required
+            </div>
+            <div class="error-message" *ngIf="hasError(financialInfoForm, 'monthlyDebt', 'pattern')">
+              Please enter a valid amount
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="employmentStatus">Employment Status <span class="required">*</span></label>
+            <select id="employmentStatus" formControlName="employmentStatus">
+              <option value="">Select Status</option>
+              <option *ngFor="let status of employmentStatuses" [value]="status.value">{{status.label}}</option>
+            </select>
+            <div class="error-message" *ngIf="hasError(financialInfoForm, 'employmentStatus', 'required')">
+              Employment status is required
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="employer">Current Employer</label>
+            <input type="text" id="employer" formControlName="employer">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="creditScore">Credit Score Range <span class="required">*</span></label>
+            <select id="creditScore" formControlName="creditScore">
+              <option value="">Select Range</option>
+              <option *ngFor="let range of getCreditScoreRanges()" [value]="range.value">{{range.label}}</option>
+            </select>
+            <div class="error-message" *ngIf="hasError(financialInfoForm, 'creditScore', 'required')">
+              Credit score range is required
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="loanType">Preferred Loan Type <span class="required">*</span></label>
+            <select id="loanType" formControlName="loanType">
+              <option value="">Select Loan Type</option>
+              <option *ngFor="let loan of loanTypes" [value]="loan.value">{{loan.label}}</option>
+            </select>
+            <div class="error-message" *ngIf="hasError(financialInfoForm, 'loanType', 'required')">
+              Loan type is required
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+    
+    <!-- Step 4: Documentation & Review -->
+    <form [formGroup]="documentationForm" *ngIf="currentStep === 4">
+      <div class="form-section">
+        <h2>Documentation & Review</h2>
+        
+        <p class="documentation-note">
+          Please confirm that you have the following documents ready for submission. 
+          These will be required for your loan application processing.
+        </p>
+        
+        <div class="document-checklist">
+          <div class="document-item">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="idUploaded"> 
+              Government-issued ID (driver's license, passport, etc.)
+              <span class="required">*</span>
+            </label>
+            <div class="error-message" *ngIf="hasError(documentationForm, 'idUploaded', 'required')">
+              Please confirm you have this document
+            </div>
+          </div>
+          
+          <div class="document-item">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="proofOfIncomeUploaded"> 
+              Proof of Income (W-2, pay stubs, tax returns)
+              <span class="required">*</span>
+            </label>
+            <div class="error-message" *ngIf="hasError(documentationForm, 'proofOfIncomeUploaded', 'required')">
+              Please confirm you have this document
+            </div>
+          </div>
+          
+          <div class="document-item">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="bankStatementsUploaded"> 
+              Bank Statements (last 2-3 months)
+              <span class="required">*</span>
+            </label>
+            <div class="error-message" *ngIf="hasError(documentationForm, 'bankStatementsUploaded', 'required')">
+              Please confirm you have this document
+            </div>
+          </div>
+        </div>
+        
+        <div class="terms-agreement">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="agreeToTerms"> 
+            I agree to the terms and conditions, and authorize Innovative Mortgage Solutions to check my credit.
+            <span class="required">*</span>
+          </label>
+          <div class="error-message" *ngIf="hasError(documentationForm, 'agreeToTerms', 'required')">
+            You must agree to the terms to continue
+          </div>
+        </div>
+        
+        <div class="application-summary">
+          <h3>Application Summary</h3>
+          <p>Please review your application before submission. You can go back to any step to make changes.</p>
+          <div class="summary-details">
+            <div class="summary-item">
+              <span class="label">Application Type:</span>
+              <span class="value">{{ isRefinance ? 'Refinance' : 'New Purchase' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+    
+    <!-- Navigation Buttons -->
+    <div class="form-navigation">
+      <button 
+        class="btn-previous" 
+        *ngIf="currentStep > 1" 
+        (click)="previousStep()">
+        Previous
+      </button>
+      
+      <button 
+        class="btn-next" 
+        *ngIf="currentStep < totalSteps" 
+        [disabled]="!isCurrentStepValid()"
+        (click)="nextStep()">
+        Next
+      </button>
+      
+      <button 
+        class="btn-submit" 
+        *ngIf="currentStep === totalSteps" 
+        [disabled]="!isCurrentStepValid()"
+        (click)="submitApplication()">
+        Submit Application
+      </button>
     </div>
   </div>
 </div>

@@ -37,8 +37,8 @@ export class LoanOfficersComponent {
       id: 3,
       name: 'Phil Mendoza',
       title: 'Loan Officer',
-      imageUrl: 'assets/loan-officers/phil_m.jpg',
-      bio: 'Phil has been in the mortgage industry for 2 weeks and already he\'s lost some people their loan. Maybe don\'t go with Phil for a while.'
+      imageUrl: 'assets/loan-officers/phil_m.jpeg',
+      bio: 'Phil has been in the mortgage industry for 2 weeks and already he\'s lost some people their loan. To be honest, I\m starting to think he\s just a statue outside a Mexican Restaurant.'
     }
   ];
 
