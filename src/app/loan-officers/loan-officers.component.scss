@@ -27,6 +27,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem;
+  grid-auto-rows: 1fr; /* Force equal height rows */
 }
 
 .officer-card {
@@ -36,6 +37,9 @@
   overflow: hidden;
   transition: all 0.3s ease;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   
   &:hover {
     transform: translateY(-5px);
@@ -48,11 +52,13 @@
 }
 
 .card-content {
-  padding: 3rem;
+  padding: 3rem 3rem 4rem; /* Increased bottom padding for view profile button */
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+  flex: 1;
+  height: 100%; /* Ensure card content takes full height */
 }
 
 .profile-image {
@@ -98,6 +104,8 @@
   padding: 0.75rem;
   opacity: 0;
   transition: opacity 0.3s ease;
+  margin-top: auto; /* Push to the bottom using flexbox */
+  width: 100%;
   
   span {
     font-weight: 500;
