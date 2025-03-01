@@ -76,7 +76,7 @@ export class LoanApplicationComponent implements OnInit {
   
   // Mock loan officers (in a real app, this would come from a service)
   loanOfficers: LoanOfficer[] = [
-    { id: 1, name: 'Michael DeMie', imageUrl: 'assets/loan-officers/michael_d.jpg' },
+    { id: 1, name: 'Mike DeMie', imageUrl: 'assets/loan-officers/michael_d.jpg' },
     { id: 2, name: 'Emilee Smith', imageUrl: 'assets/loan-officers/emilee_s.png' },
     { id: 3, name: 'José "Hot Taco" Mendoza', imageUrl: 'assets/loan-officers/phil_m.jpeg' },
   ];

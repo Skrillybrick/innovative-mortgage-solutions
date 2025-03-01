@@ -21,10 +21,10 @@ export class LoanOfficersComponent {
   loanOfficers: LoanOfficer[] = [
     {
       id: 1,
-      name: 'Michael DeMie',
-      title: 'Mortgage Broker',
+      name: 'Mike DeMie',
+      title: 'Principal Lending Manager',
       imageUrl: 'assets/loan-officers/michael_d.jpg',
-      bio: 'Michael has over 25 years of experience in the mortgage industry. He is basically a real wiz at this type of stuff.'
+      bio: 'Mike has over 25 years of experience in the mortgage industry. He is basically a real wiz at this type of stuff.'
     },
     {
       id: 2,
