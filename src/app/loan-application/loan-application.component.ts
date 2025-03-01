@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+import { EmailService } from '../shared/services/email.service';
 
 interface LoanOfficer {
   id: number;
@@ -23,7 +25,7 @@ interface PreviousResidence {
 @Component({
   selector: 'app-loan-application',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
   templateUrl: './loan-application.component.html',
   styleUrl: './loan-application.component.scss'
 })
@@ -31,7 +33,9 @@ export class LoanApplicationComponent implements OnInit {
   officerId: number | null = null;
   selectedOfficer: LoanOfficer | null = null;
   
-  // Loan type selection
+  // Application progress tracking
+  officerSelectionMode = false; // New state to track if we're on the officer selection step
+  officerSelectionForm!: FormGroup;
   loanPurposeForm!: FormGroup;
   loanPurposeSelected = false;
   isRefinance = false;
@@ -74,15 +78,33 @@ export class LoanApplicationComponent implements OnInit {
   loanOfficers: LoanOfficer[] = [
     { id: 1, name: 'Michael DeMie', imageUrl: 'assets/loan-officers/michael_d.jpg' },
     { id: 2, name: 'Emilee Smith', imageUrl: 'assets/loan-officers/emilee_s.png' },
-    { id: 3, name: 'José "Hot Taco"  Mendoza', imageUrl: 'assets/loan-officers/phil_m.jpeg' },
+    { id: 3, name: 'José "Hot Taco" Mendoza', imageUrl: 'assets/loan-officers/phil_m.jpeg' },
   ];
+  
+  // Add a function to select a loan officer
+  selectLoanOfficer(): void {
+    const selectedId = this.officerSelectionForm.get('selectedOfficerId')?.value;
+    if (selectedId) {
+      this.officerId = Number(selectedId);
+      this.selectedOfficer = this.loanOfficers.find(officer => officer.id === this.officerId) || null;
+    }
+    this.officerSelectionMode = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  
+  // Skip loan officer selection
+  skipOfficerSelection(): void {
+    this.officerSelectionMode = false;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
   
   applicationSubmitted = false;
   
   constructor(
     private route: ActivatedRoute, 
     private router: Router, 
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private emailService: EmailService
   ) {}
   
   ngOnInit(): void {
@@ -97,6 +119,9 @@ export class LoanApplicationComponent implements OnInit {
         if (this.selectedOfficer) {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+      } else {
+        // If no officer was pre-selected, show the officer selection screen first
+        this.officerSelectionMode = true;
       }
     });
   }
@@ -105,6 +130,11 @@ export class LoanApplicationComponent implements OnInit {
     // Loan Purpose Form
     this.loanPurposeForm = this.fb.group({
       purpose: ['', [Validators.required]]
+    });
+    
+    // Officer Selection Form (added for the new optional step)
+    this.officerSelectionForm = this.fb.group({
+      selectedOfficerId: [null]
     });
     
     // Personal Information Form
@@ -227,9 +257,10 @@ export class LoanApplicationComponent implements OnInit {
       // On mobile, only scroll when going back to first step
       if (!this.isMobileDevice()) {
         // Desktop behavior: always scroll to application form
-        const appForm = document.getElementById('application-form');
-        if (appForm) {
-          appForm.scrollIntoView({ behavior: 'smooth' });
+        const pageHeader = document.querySelector('.page-header');
+        if (pageHeader) {
+          const bottomPosition = pageHeader.getBoundingClientRect().bottom + window.scrollY;
+          window.scrollTo({ top: bottomPosition, behavior: 'smooth' });
         }
       } else if (currentStep === 2) {
         // Mobile behavior: only scroll when going back to first step
@@ -252,9 +283,10 @@ export class LoanApplicationComponent implements OnInit {
       // On mobile, only scroll for the first step transition
       if (!this.isMobileDevice()) {
         // Desktop behavior: always scroll to application form
-        const appForm = document.getElementById('application-form');
-        if (appForm) {
-          appForm.scrollIntoView({ behavior: 'smooth' });
+        const pageHeader = document.querySelector('.page-header');
+        if (pageHeader) {
+          const bottomPosition = pageHeader.getBoundingClientRect().bottom + window.scrollY;
+          window.scrollTo({ top: bottomPosition, behavior: 'smooth' });
         }
       } else if (previousStep === 1) {
         // Mobile behavior: only scroll on first step
@@ -369,75 +401,78 @@ export class LoanApplicationComponent implements OnInit {
   
   submitApplication(): void {
     if (this.documentationForm.valid) {
-      // In a real application, this is where you would call a service to submit the form data
-      console.log('Application Submitted!');
-      console.log('Loan Purpose:', this.isRefinance ? 'Refinance' : 'New Purchase');
-      console.log('Personal Info:', this.personalInfoForm.value);
-      console.log('Property Info:', this.propertyInfoForm.value);
-      console.log('Financial Info:', this.financialInfoForm.value);
-      console.log('Living History:', this.livingHistoryForm.value);
+      // Create the FormData object to send to the server
+      const formData = new FormData();
       
-      // Log document information more specifically
+      // Get all document files
       const idDoc = this.documentationForm.get('idDocument')?.value;
       const incomeFiles = this.documentationForm.get('incomeDocuments')?.value;
       const bankFiles = this.documentationForm.get('bankStatements')?.value;
       const additionalFiles = this.documentationForm.get('additionalDocuments')?.value;
       
-      console.log('Documentation:');
-      console.log('- ID Document:', idDoc ? idDoc.name : 'None');
-      console.log('- Income Documents:', incomeFiles ? Array.from(incomeFiles as File[]).map((f: File) => f.name).join(', ') : 'None');
-      console.log('- Bank Statements:', bankFiles ? Array.from(bankFiles as File[]).map((f: File) => f.name).join(', ') : 'None');
-      console.log('- Additional Documents:', additionalFiles ? Array.from(additionalFiles as File[]).map((f: File) => f.name).join(', ') : 'None');
-      console.log('- Terms Agreed:', this.documentationForm.get('agreeToTerms')?.value);
+      // Add ID document
+      if (idDoc) {
+        formData.append('idDocument', idDoc);
+      }
       
-      // In a real application, you would send files to a server here, potentially using FormData
-      // For example:
-      /*
-      const formData = new FormData();
-      formData.append('idDocument', idDoc);
-      
+      // Add each income document
       if (incomeFiles) {
         for (let i = 0; i < incomeFiles.length; i++) {
           formData.append('incomeDocuments', incomeFiles[i]);
         }
       }
       
+      // Add each bank statement
       if (bankFiles) {
         for (let i = 0; i < bankFiles.length; i++) {
           formData.append('bankStatements', bankFiles[i]);
         }
       }
       
+      // Add additional documents if any
       if (additionalFiles) {
         for (let i = 0; i < additionalFiles.length; i++) {
           formData.append('additionalDocuments', additionalFiles[i]);
         }
       }
       
-      // Add form data
-      formData.append('loanPurpose', this.isRefinance ? 'refinance' : 'purchase');
-      formData.append('personalInfo', JSON.stringify(this.personalInfoForm.value));
-      formData.append('propertyInfo', JSON.stringify(this.propertyInfoForm.value));
-      formData.append('financialInfo', JSON.stringify(this.financialInfoForm.value));
-      formData.append('livingHistory', JSON.stringify({
-        currentResidence: this.livingHistoryForm.value,
-        previousResidences: this.previousResidences.value
-      }));
-      
-      // Submit via HTTP
-      this.http.post('/api/loan-applications', formData).subscribe(
-        response => {
-          this.applicationSubmitted = true;
-        },
-        error => {
-          console.error('Error submitting application:', error);
+      // Prepare application data
+      const applicationData = {
+        loanPurpose: this.isRefinance ? 'refinance' : 'purchase',
+        personalInfo: this.personalInfoForm.value,
+        propertyInfo: this.propertyInfoForm.value,
+        financialInfo: this.financialInfoForm.value,
+        livingHistory: {
+          currentResidence: this.livingHistoryForm.value,
+          previousResidences: this.previousResidences.value
         }
-      );
-      */
+      };
       
+      // Add application data as JSON string
+      formData.append('applicationData', JSON.stringify(applicationData));
+      
+      // Add loan officer data if selected
+      if (this.selectedOfficer) {
+        formData.append('loanOfficer', JSON.stringify(this.selectedOfficer));
+      }
+      
+      // TODO - Submit the application data to the server
+      // Submit via the EmailService
+      // this.emailService.sendLoanApplication(formData).subscribe(
+      //   response => {
+      //     console.log('Application submitted successfully:', response);
+      //     this.applicationSubmitted = true;
+          
+      //     // Scroll to top for success message - this one should go to the very top
+      //     window.scrollTo({ top: 0, behavior: 'smooth' });
+      //   },
+      //   error => {
+      //     console.error('Error submitting application:', error);
+      //     // Show error message to user (you can add UI for this)
+      //     alert('There was an error submitting your application. Please try again later.');
+      //   }
+      // );
       this.applicationSubmitted = true;
-      
-      // Scroll to top for success message - this one should go to the very top
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }

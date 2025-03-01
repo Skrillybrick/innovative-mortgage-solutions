@@ -20,8 +20,48 @@
     </div>
   }
   
+  <!-- Loan Officer Selection - Show first if no officer was pre-selected -->
+  @if (!applicationSubmitted && officerSelectionMode) {
+    <div class="application-form loan-purpose-form">
+      <div class="form-section">
+        <h2>Do you have a preferred loan officer?</h2>
+        <p>Select a loan officer or proceed without selecting one. You can always be assigned an officer later.</p>
+        
+        <form [formGroup]="officerSelectionForm">
+          <div class="loan-officers-selection">
+            @for (officer of loanOfficers; track officer.id) {
+              <div class="officer-card">
+                <label class="radio-card">
+                  <input type="radio" [value]="officer.id" formControlName="selectedOfficerId">
+                  <div class="card-content">
+                    <div class="officer-image">
+                      <img [src]="officer.imageUrl" [alt]="officer.name" onerror="this.src='assets/loan-officers/placeholder-profile.png'">
+                    </div>
+                    <h3>{{officer.name}}</h3>
+                  </div>
+                </label>
+              </div>
+            }
+          </div>
+          
+          <div class="form-navigation">
+            <button class="btn-secondary" (click)="skipOfficerSelection()">
+              Skip this step
+            </button>
+            <button 
+              class="btn-next" 
+              [disabled]="!officerSelectionForm.get('selectedOfficerId')?.value"
+              (click)="selectLoanOfficer()">
+              Continue with selected officer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+  
   <!-- Loan Purpose Selection - Only show if not submitted and purpose not selected -->
-  @if (!applicationSubmitted && !loanPurposeSelected) {
+  @if (!applicationSubmitted && !loanPurposeSelected && !officerSelectionMode) {
     <div class="application-form loan-purpose-form">
       <div class="form-section">
         <h2>What type of mortgage are you interested in?</h2>
@@ -960,9 +1000,11 @@
             
             <div class="terms-agreement">
               <label class="checkbox-label">
-                <input type="checkbox" formControlName="agreeToTerms"> 
-                I agree to the terms and conditions, and authorize Innovative Mortgage Solutions to check my credit.
-                <span class="required">*</span>
+                <input type="checkbox" formControlName="agreeToTerms" id="terms-checkbox"> 
+                <span>
+                  I agree to the terms and conditions, and authorize Innovative Mortgage Solutions to check my credit.
+                  <span class="required">*</span>
+                </span>
               </label>
               @if (hasError(documentationForm, 'agreeToTerms', 'required')) {
                 <div class="error-message">
