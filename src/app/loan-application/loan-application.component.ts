@@ -171,7 +171,9 @@ export class LoanApplicationComponent implements OnInit {
     this.financialInfoForm = this.fb.group({
       annualIncome: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
       employmentStatus: ['', [Validators.required]],
-      employer: [''],
+      employer: ['', [Validators.required]],
+      jobTitle: ['', [Validators.required]],
+      yearsEmployed: ['', [Validators.pattern(/^\d+$/)]],
       creditScore: ['', [Validators.required]],
       monthlyDebt: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
       loanType: ['', [Validators.required]]
