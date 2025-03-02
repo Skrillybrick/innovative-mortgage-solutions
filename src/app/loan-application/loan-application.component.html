@@ -499,9 +499,9 @@
                 <input type="text" id="employer" formControlName="employer">
               </div>
             </div>
-            <div class="form-group">
+            <div class="form-row">
               <div class="form-group">
-                <label for="jobTitle">Job Title</label>
+                <label for="jobTitle">Job Title<span class="required">*</span></label>
                 <input type="text" id="jobTitle" formControlName="jobTitle">
                 @if (hasError(financialInfoForm, 'jobTitle', 'required')) {
                   <div class="error-message">
@@ -510,9 +510,9 @@
                 }
               </div>
               <div class="form-group">
-                <label for="yearsEmployed">Years Employed</label>
+                <label for="yearsEmployed">Years Employed<span class="required">*</span></label>
                 <input type="text" id="yearsEmployed" formControlName="yearsEmployed">
-                @if (hasError(financialInfoForm, 'jobTitle', 'required')) {
+                @if (hasError(financialInfoForm, 'yearsEmployed', 'required')) {
                   <div class="error-message">
                     Years employed is required
                   </div>
@@ -585,27 +585,17 @@
                 <div class="form-group">
                   <label for="currentResidenceYears">Years at Current Address</label>
                   <input type="number" min="0" max="99" id="currentResidenceYears" formControlName="currentResidenceYears" (change)="updatePreviousResidenceValidators()">
-                  @if (hasError(livingHistoryForm, 'currentResidenceYears', 'pattern')) {
+                  <!-- Add a message if both years and months are 0 -->
+                  @if (livingHistoryForm.errors?.['atLeastOneTimeRequired']) {
                     <div class="error-message">
-                      Please enter a valid number
+                      Please enter either years or months (or both)
                     </div>
                   }
                 </div>
                 <div class="form-group">
                   <label for="currentResidenceMonths">Months</label>
                   <input type="number" min="0" max="11" id="currentResidenceMonths" formControlName="currentResidenceMonths" (change)="updatePreviousResidenceValidators()">
-                  @if (hasError(livingHistoryForm, 'currentResidenceMonths', 'pattern')) {
-                    <div class="error-message">
-                      Please enter a valid number
-                    </div>
-                  }
                 </div>
-                <!-- Add a message if both years and months are 0 -->
-                @if (livingHistoryForm.errors?.['atLeastOneTimeRequired']) {
-                  <div class="error-message time-error">
-                    Please enter either years or months (or both)
-                  </div>
-                }
                 <div class="form-group">
                   <label for="currentMonthlyPayment">Monthly Payment/Rent ($) <span class="required">*</span></label>
                   <input type="text" id="currentMonthlyPayment" formControlName="currentMonthlyPayment">
