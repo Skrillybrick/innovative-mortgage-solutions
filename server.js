@@ -4,7 +4,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Serve only the static files from the dist directory
-const distPath = path.join(__dirname, '/dist/YOUR_APP_NAME');
+const distPath = path.join(__dirname, '/dist/innovative-mortgage-solutions');
 app.use(express.static(distPath));
 
 // Send all requests to index.html
