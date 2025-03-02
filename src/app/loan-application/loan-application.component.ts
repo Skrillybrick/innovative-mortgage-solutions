@@ -181,12 +181,14 @@ export class LoanApplicationComponent implements OnInit {
     this.livingHistoryForm = this.fb.group({
       // Current residence
       currentResidenceType: ['', [Validators.required]],
-      currentResidenceYears: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
-      currentResidenceMonths: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+      currentResidenceYears: ['0', [Validators.pattern(/^\d+$/)]],
+      currentResidenceMonths: ['0', [Validators.pattern(/^\d+$/)]],
       currentMonthlyPayment: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]],
       
       // Previous residences array (required if current residence is less than 2 years)
       previousResidences: this.fb.array([])
+    }, { 
+      validators: this.atLeastOneTimeValidator('currentResidenceYears', 'currentResidenceMonths')
     });
     
     // Documentation Form with file uploads
@@ -330,12 +332,15 @@ export class LoanApplicationComponent implements OnInit {
       case 3:
         return this.financialInfoForm.valid;
       case 4:
+        // Check if form as a whole is valid (includes our custom validator)
+        const livingHistoryFormValid = this.livingHistoryForm.valid;
+        
         // Check required fields for current residence
-        const currentResidenceValid = 
-          this.livingHistoryForm.get('currentResidenceType')!.valid &&
-          this.livingHistoryForm.get('currentResidenceYears')!.valid &&
-          this.livingHistoryForm.get('currentResidenceMonths')!.valid &&
-          this.livingHistoryForm.get('currentMonthlyPayment')!.valid;
+        const currentResidenceTypeValid = this.livingHistoryForm.get('currentResidenceType')!.valid;
+        const currentMonthlyPaymentValid = this.livingHistoryForm.get('currentMonthlyPayment')!.valid;
+        const timeFieldsValid = !this.livingHistoryForm.hasError('atLeastOneTimeRequired');
+        
+        const currentResidenceValid = currentResidenceTypeValid && currentMonthlyPaymentValid && timeFieldsValid;
           
         // Get total months at current residence
         const totalMonths = this.getTotalMonthsAtCurrentResidence();
@@ -570,9 +575,11 @@ export class LoanApplicationComponent implements OnInit {
       state: ['', [Validators.required]],
       zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}(-\d{4})?$/)]],
       residenceType: ['', [Validators.required]],
-      years: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
-      months: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
+      years: ['0', [Validators.pattern(/^\d+$/)]],
+      months: ['0', [Validators.pattern(/^\d+$/)]],
       monthlyPayment: ['', [Validators.required, Validators.pattern(/^\d+(\.\d{1,2})?$/)]]
+    }, {
+      validators: this.atLeastOneTimeValidator('years', 'months')
     });
   }
   
@@ -755,6 +762,32 @@ export class LoanApplicationComponent implements OnInit {
   // Check if we're on a mobile device
   isMobileDevice(): boolean {
     return window.innerWidth <= 768;
+  }
+  
+  // Custom validator to require at least one of years or months to be greater than 0
+  atLeastOneTimeValidator(yearsControlName: string, monthsControlName: string) {
+    return (formGroup: FormGroup) => {
+      const years = formGroup.get(yearsControlName);
+      const months = formGroup.get(monthsControlName);
+      
+      if (!years || !months) {
+        return null;
+      }
+      
+      const yearsValue = parseInt(years.value || '0');
+      const monthsValue = parseInt(months.value || '0');
+      
+      // Only validate if both have been touched or form has been submitted
+      const shouldValidate = (years.touched || months.touched);
+      
+      if (shouldValidate && yearsValue === 0 && monthsValue === 0) {
+        // If both are 0, set the error on the form
+        return { atLeastOneTimeRequired: true };
+      }
+      
+      // Clear any previous errors if at least one has a value
+      return null;
+    };
   }
   
   // Get file size for a specific control

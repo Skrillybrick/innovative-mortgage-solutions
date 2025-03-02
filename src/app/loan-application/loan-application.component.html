@@ -563,13 +563,8 @@
               
               <div class="form-row">
                 <div class="form-group">
-                  <label for="currentResidenceYears">Years at Current Address <span class="required">*</span></label>
+                  <label for="currentResidenceYears">Years at Current Address</label>
                   <input type="number" min="0" max="99" id="currentResidenceYears" formControlName="currentResidenceYears" (change)="updatePreviousResidenceValidators()">
-                  @if (hasError(livingHistoryForm, 'currentResidenceYears', 'required')) {
-                    <div class="error-message">
-                      Years is required
-                    </div>
-                  }
                   @if (hasError(livingHistoryForm, 'currentResidenceYears', 'pattern')) {
                     <div class="error-message">
                       Please enter a valid number
@@ -577,19 +572,20 @@
                   }
                 </div>
                 <div class="form-group">
-                  <label for="currentResidenceMonths">Months <span class="required">*</span></label>
+                  <label for="currentResidenceMonths">Months</label>
                   <input type="number" min="0" max="11" id="currentResidenceMonths" formControlName="currentResidenceMonths" (change)="updatePreviousResidenceValidators()">
-                  @if (hasError(livingHistoryForm, 'currentResidenceMonths', 'required')) {
-                    <div class="error-message">
-                      Months is required
-                    </div>
-                  }
                   @if (hasError(livingHistoryForm, 'currentResidenceMonths', 'pattern')) {
                     <div class="error-message">
                       Please enter a valid number
                     </div>
                   }
                 </div>
+                <!-- Add a message if both years and months are 0 -->
+                @if (livingHistoryForm.errors?.['atLeastOneTimeRequired']) {
+                  <div class="error-message time-error">
+                    Please enter either years or months (or both)
+                  </div>
+                }
                 <div class="form-group">
                   <label for="currentMonthlyPayment">Monthly Payment/Rent ($) <span class="required">*</span></label>
                   <input type="text" id="currentMonthlyPayment" formControlName="currentMonthlyPayment">
@@ -702,23 +698,29 @@
                       
                       <div class="form-row">
                         <div class="form-group">
-                          <label [for]="'years-' + $index">Years at This Address <span class="required">*</span></label>
+                          <label [for]="'years-' + $index">Years at This Address</label>
                           <input type="number" min="0" max="99" [id]="'years-' + $index" formControlName="years">
-                          @if (residence.get('years')?.invalid && (residence.get('years')?.dirty || residence.get('years')?.touched)) {
+                          @if (residence.get('years')?.errors?.['pattern'] && (residence.get('years')?.dirty || residence.get('years')?.touched)) {
                             <div class="error-message">
-                              Years is required
+                              Please enter a valid number
                             </div>
                           }
                         </div>
                         <div class="form-group">
-                          <label [for]="'months-' + $index">Months <span class="required">*</span></label>
+                          <label [for]="'months-' + $index">Months</label>
                           <input type="number" min="0" max="11" [id]="'months-' + $index" formControlName="months">
-                          @if (residence.get('months')?.invalid && (residence.get('months')?.dirty || residence.get('months')?.touched)) {
+                          @if (residence.get('months')?.errors?.['pattern'] && (residence.get('months')?.dirty || residence.get('months')?.touched)) {
                             <div class="error-message">
-                              Months is required
+                              Please enter a valid number
                             </div>
                           }
                         </div>
+                        <!-- Add error message for the atLeastOneTimeRequired validator -->
+                        @if (residence.errors?.['atLeastOneTimeRequired']) {
+                          <div class="error-message time-error">
+                            Please enter either years or months (or both)
+                          </div>
+                        }
                         <div class="form-group">
                           <label [for]="'monthlyPayment-' + $index">Monthly Payment/Rent ($) <span class="required">*</span></label>
                           <input type="text" [id]="'monthlyPayment-' + $index" formControlName="monthlyPayment">

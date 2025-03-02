@@ -536,6 +536,15 @@
     color: #e74c3c;
     font-size: 0.85rem;
     margin-top: 0.5rem;
+    
+    &.time-error {
+      width: 100%;
+      text-align: center;
+      margin-top: 0.5rem;
+      padding: 0.25rem;
+      background-color: rgba(231, 76, 60, 0.1);
+      border-radius: 4px;
+    }
   }
 }
 
