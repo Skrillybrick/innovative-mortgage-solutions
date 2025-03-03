@@ -1,0 +1,128 @@
+<div class="calculator-container">
+  <div class="page-header">
+    <h1>Mortgage Payment Calculator</h1>
+    <p class="subtitle">Estimate your monthly mortgage payments and see the breakdown of costs over time</p>
+  </div>
+  
+  <div class="calculator-content">
+    <div class="calculator-form-container">
+      <form [formGroup]="calculatorForm" (ngSubmit)="calculateLoan()">
+        <div class="form-group">
+          <label for="loanAmount">Home Price</label>
+          <div class="input-with-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="loanAmount" formControlName="loanAmount" min="1000">
+          </div>
+          <div class="error-message" *ngIf="calculatorForm.get('loanAmount')?.invalid && calculatorForm.get('loanAmount')?.touched">
+            Please enter a valid amount (minimum $1,000)
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="downPayment">Down Payment</label>
+          <div class="input-with-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="downPayment" formControlName="downPayment" min="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="interestRate">Interest Rate (%)</label>
+          <input type="number" id="interestRate" formControlName="interestRate" min="0.1" max="25" step="0.01">
+          <div class="error-message" *ngIf="calculatorForm.get('interestRate')?.invalid && calculatorForm.get('interestRate')?.touched">
+            Please enter a valid rate between 0.1% and 25%
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="loanTerm">Loan Term (years)</label>
+          <select id="loanTerm" formControlName="loanTerm">
+            <option value="10">10 years</option>
+            <option value="15">15 years</option>
+            <option value="20">20 years</option>
+            <option value="25">25 years</option>
+            <option value="30">30 years</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="propertyTax">Annual Property Tax</label>
+          <div class="input-with-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="propertyTax" formControlName="propertyTax" min="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="homeInsurance">Annual Home Insurance</label>
+          <div class="input-with-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="homeInsurance" formControlName="homeInsurance" min="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="pmi">Monthly PMI (if applicable)</label>
+          <div class="input-with-prefix">
+            <span class="prefix">$</span>
+            <input type="number" id="pmi" formControlName="pmi" min="0">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="loanType">Loan Type</label>
+          <select id="loanType" formControlName="loanType">
+            <option *ngFor="let type of loanTypes" [value]="type.value">{{type.label}}</option>
+          </select>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="calculatorForm.invalid">Calculate</button>
+          <button type="button" class="btn-secondary" (click)="resetForm()">Reset</button>
+        </div>
+      </form>
+    </div>
+    
+    <div class="calculator-results">
+      <div class="results-summary">
+        <h2>Payment Summary</h2>
+        
+        <div class="payment-amount">
+          <div class="payment-label">Monthly Payment:</div>
+          <div class="payment-value">{{formatCurrency(monthlyPayment)}}</div>
+        </div>
+        
+        <div class="payment-details">
+          <div class="detail-item">
+            <span class="detail-label">Total Loan Amount:</span>
+            <span class="detail-value">{{formatCurrency(calculatorForm.get('loanAmount')?.value - calculatorForm.get('downPayment')?.value)}}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Total Interest Paid:</span>
+            <span class="detail-value">{{formatCurrency(totalInterest)}}</span>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Total of All Payments:</span>
+            <span class="detail-value">{{formatCurrency(totalPayment)}}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="chart-container payment-breakdown">
+        <canvas #paymentChart></canvas>
+      </div>
+      
+      <div class="chart-container amortization">
+        <canvas #amortizationChart></canvas>
+      </div>
+      
+      <div class="cta-container">
+        <h3>Ready to apply?</h3>
+        <p>Get started with your mortgage application today and take the next step towards homeownership.</p>
+        <a [routerLink]="['/loan-application']" class="btn-apply">Apply Now</a>
+      </div>
+    </div>
+  </div>
+</div>
